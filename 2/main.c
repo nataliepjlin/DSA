@@ -33,6 +33,8 @@ void add(int u, Deck **head, Deck **tail, int *len){
     *len += 1;
 }
 void remov(Deck **head, Deck **tail, int *len){
+    if(*head == NULL) return;
+
     *head = (*head)->next;
     if(*head == NULL) *tail = NULL;
     *len -= 1;
@@ -40,7 +42,12 @@ void remov(Deck **head, Deck **tail, int *len){
 void concat(Deck **h1, Deck **t1, int *l1, Deck **h2, Deck **t2, int *l2){
     if(*l1 == 0)
         return;
-    (*t1)->next = *h2;
+    else if(*l2 == 0){
+        *t2 = *t1;
+    }
+    else{
+        (*t1)->next = *h2;
+    }
     *h2 = *h1;
     *l2 += *l1;
     *h1 = NULL, *t1 = NULL, *l1 = 0;
@@ -48,11 +55,6 @@ void concat(Deck **h1, Deck **t1, int *l1, Deck **h2, Deck **t2, int *l2){
 }
 void merge(Deck **h1, Deck **t1, int *l1, Deck **h2, Deck **t2, int *l2){
     if(*l1 == 0) return;
-    if(*l2 == 0){
-        *h2 = *h1, *t2 = *t1, *l2 = *l1;
-        *h1 = NULL, *t1 = NULL, *l1 = 0;
-        return;
-    }
     Deck *ptr1 = *h1, *ptr2 = *h2;
     int cnt = 0;
     Deck *tmph = gen(-1, NULL), *tmpcur = tmph;
