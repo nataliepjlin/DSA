@@ -37,6 +37,6 @@ int main(){
     int used = sort(arr, n, b);
     printf("The array is ");
     print(arr, n);
-    printf(" after %d swaps.\n", used);
+    printf("after %d swaps.\n", used);
     return 0;
 }
