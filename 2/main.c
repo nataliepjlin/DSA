@@ -12,7 +12,7 @@ int main(){
     Deck *heads[N] = {0};
     Deck *tail[N] = {0};
     int lens[N] = {0};
-    for(int idx = 0; idx < m; idx++){
+    for(int op = 0; op < m; op++){
         scanf("%d", &t);
         #ifdef debug
         printf("\ntype = %d\n", t);
@@ -51,7 +51,6 @@ int main(){
             else{
                 tail[i]->next = heads[j];
                 heads[j] = heads[i];
-                tail[j] = tail[i];
             }
             heads[i] = tail[i] = NULL;
             lens[j] += lens[i];
@@ -115,7 +114,8 @@ int main(){
             lens[j] += lens[i];
             lens[i] = 0;
         }//4
-    }// m op
+    }
+
     for(int i = 0; i < n; i++){
         printf("%d", lens[i]);
         for(int j = 0; j < lens[i]; j++){
