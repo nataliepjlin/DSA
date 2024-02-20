@@ -48,4 +48,5 @@ int main(){
             printf("%lld%c", ans[i][j], " \n"[j == n - 1]);
     }
     return 0;
+    
 }
