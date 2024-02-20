@@ -14,7 +14,7 @@ bool valid(int n, long long trial[]) {
     return true;
 }
 
-void perm(int idx, int n, bool used[], long long trial[N], const long long arr[], int ans[N][N], int *cnt) {
+void perm(int idx, int n, bool used[], long long trial[N], const long long arr[], long long ans[N][N], int *cnt) {
     if (!valid(idx, trial))
         return;
     if (idx == n) {
@@ -59,12 +59,12 @@ int main() {
 
     int cnt = 0;
     long long trial[N];
-    int ans[N][N];
+    long long ans[N][N];
     perm(0, n, used, trial, arr, ans, &cnt);
     printf("%d\n", cnt);
     for(int i = 0; i < cnt; i++){
         for(int j = 0; j < n; j++)
-            printf("%d%c", ans[i][j], " \n"[j == n - 1]);
+            printf("%lld%c", ans[i][j], " \n"[j == n - 1]);
     }
     return 0;
 }
