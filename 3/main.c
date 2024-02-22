@@ -14,11 +14,12 @@ void swap(int *a, int *b){
 }
 int sort(int arr[], const int n, const int b){
     int used = 0;
-    for(int i = 0; i < n && used < b; i++){
+    for(int i = 0; i < n; i++){
         int m = getMinIdx(i, n - 1, arr);
         if(i != m){
             swap(&arr[i], &arr[m]);
             used++;
+            if(used == b) break;
         }
     }
     return used;
