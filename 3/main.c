@@ -1,8 +1,8 @@
 #include <stdio.h>
-int arr[100001];
-int getMinIdx(int l, int r){
+#include <stdlib.h>
+int getMinIdx(int *arr, int l, int n){
     int m = l;
-    for(int i = l + 1; i <= r; i++){
+    for(int i = l + 1; i < n; i++){
         if(arr[m] > arr[i])
             m = i;
     }
@@ -13,10 +13,10 @@ void swap(int *a, int *b){
     *a = *b;
     *b = t;
 }
-int sort(const int n, const int b){
+int sort(int *arr, const int n, const int b){
     int used = 0;
     for(int i = 0; i < n; i++){
-        int m = getMinIdx(i, n - 1);
+        int m = getMinIdx(arr, i, n);
         if(i != m){
             swap(&arr[i], &arr[m]);
             used++;
@@ -25,7 +25,7 @@ int sort(const int n, const int b){
     }
     return used;
 }
-void print(int n){
+void print(int *arr, int n){
     for(int i = 0; i < n; i++){
         printf("%d ", arr[i]);
     }
@@ -33,11 +33,13 @@ void print(int n){
 int main(){
     int n, b;
     scanf("%d%d", &n, &b);
+    int *arr = malloc(sizeof(int) * n);
     for(int i = 0; i < n; i++)
         scanf("%d", &arr[i]);
-    int used = sort(n, b);
+    int used = sort(arr, n, b);
     printf("The array is ");
-    print(n);
+    print(arr, n);
     printf("after %d swaps.\n", used);
+    free(arr);
     return 0;
 }
