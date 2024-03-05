@@ -1,51 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-
+#include <assert.h>
+/* Node */
 typedef struct Node {
-    struct Node *next;
-    int data;
-} Node;
-
-void slowGet(Node *node, const int data) {
-    Node *cur = node;
-    int flag = 1;
-    while (cur && cur->data >= data) {
-        flag = 0;
-        printf("%d ", cur->data);
-        cur = cur->next;
-    }
-    if (flag) printf("-1");
-    printf("\n");
+  int data;
+  struct Node *next;
+}Node;  
+Node *genNode(int data, Node *next)
+{
+  Node *node =
+    (Node *)malloc(sizeof(Node));
+  assert(node != NULL);
+  node->data = data;
+  node->next = next;
+  return node;
 }
+Node *insert(Node *head, int data)
+{
+  Node *current = genNode(data, NULL);
+  if (head == NULL) 
+    return(current);
 
-Node *genNode(int data, Node *next) {
-    Node *new = (Node *)malloc(sizeof(Node));
-    new->data = data, new->next = next;
-    return new;
+  Node *ptr = head;
+  Node *last = NULL;
+  while (ptr != NULL && ptr->data > data) {
+    last = ptr;
+    ptr = ptr->next;
+  }
+  if (last == NULL) {
+    current->next = head;
+    return(current);
+  } else {
+    current->next = last->next;
+    last->next = current;
+    return(head);
+  }
 }
-
-Node *insert(Node *node, const int data) {
-    Node *newNode = genNode(data, NULL);
-    if (node == NULL || data > node->data) {
-        newNode->next = node;
-        return newNode;
-    }
-
-    Node *prev = NULL;
-    Node *cur = node;
-    while (cur && data <= cur->data) {
-        prev = cur;
-        cur = cur->next;
-    }
-
-    prev->next = newNode;
-    newNode->next = cur;
-    return node;
-}
-
-Node *deleteNode(Node *node, int data) {
-    Node *cur = node;
+Node *delete(Node *head, int data)
+{
+    Node *cur = head;
     Node *prev = NULL;
 
     while (cur && cur->data > data) {
@@ -55,31 +48,42 @@ Node *deleteNode(Node *node, int data) {
 
     if (cur && cur->data == data) {
         if (prev == NULL) {
-            node = cur->next;
+            head = cur->next;
         } else {
             prev->next = cur->next;
         }
         free(cur);
     }
-
-    return node;
+    return head;
 }
-
-int main() {
-    int m, t, k;
-    scanf("%d", &m);
-    Node *node = NULL;
-
-    for (int i = 0; i < m; i++) {
-        scanf("%d%d", &t, &k);
-        if (t == 1) {
-            slowGet(node, k);
-        } else if (t == 3) {
-            node = insert(node, k);
-        } else if (t == 4) {
-            node = deleteNode(node, k);
-        }
+void slow(Node *head, int k){
+    if(head == NULL || head->data < k){
+        printf("-1\n");
+        return;
     }
-
-    return 0;
+    while(head && head->data > k){
+        printf("%d ", head->data);
+        head = head->next;
+    }
+    if(head && head->data == k)
+        printf("%d", head->data);
+    printf("\n");
+}
+int main(void)
+{
+  
+  int m, t, k;
+  scanf("%d", &m);
+  Node *head = NULL;
+  for(int i = 0; i < m; i++){
+    scanf("%d%d", &t, &k);
+    if(t == 1)
+        slow(head, k);
+    else if(t == 3)
+        head = insert(head, k);
+    else if(t == 4)
+        head = delete(head, k);
+    else break;
+  }
+  return 0;
 }
