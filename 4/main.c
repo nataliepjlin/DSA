@@ -52,7 +52,6 @@ Node *delete(Node *head, int data)
         } else {
             prev->next = cur->next;
         }
-        free(cur);
     }
     return head;
 }
