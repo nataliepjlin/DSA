@@ -7,20 +7,24 @@ typedef struct Node{
     int data;
 }Node;
 void slowGet(Node *node, const int data){
+    Node *cur = node;
     int flag = 1;
-    while(node && data <= node->data){
+    while(cur && cur->data >= data){
         flag = 0;
-        printf("%d ", node->data);
-        node = node->next;
+        printf("%d ", cur->data);
+        cur = cur->next;
     }
     if(flag) printf("-1");
     printf("\n");
 }
-Node* insert(Node *node, const int data){
-    Node *new = (Node*)malloc(sizeof(Node)), *prev = NULL;
+Node *genNode(int data, Node *next){
+    Node *new = (Node*)malloc(sizeof(Node));
     new->data = data, new->next = NULL;
+    return new;
+}
+Node* insert(Node *node, const int data){
+    Node *prev = NULL, *new = genNode(data, NULL);
     if(node == NULL) return new;
-
     Node *cur = node;
     while(cur && data < cur->data){
         prev = cur;
@@ -48,9 +52,8 @@ Node *delete(Node *node, int data){
         if(prev == NULL)
             return node->next;
         prev->next = cur->next;
-        return node;
     }
-    return NULL;
+    return node;
 }
 int main(){
     int m, t, k;
