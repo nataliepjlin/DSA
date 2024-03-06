@@ -4,28 +4,28 @@ typedef struct Node{
     int data;
     struct Node *next;
 }Node;
-Node *insert(Node *head, int data){//returning new head
+Node *genNode(Node *next, int data){
     Node *now = (Node *)malloc(sizeof(Node));
-    now->data = data, now->next = NULL;
+    now->data = data, now->next = next;
+    return now;
+}
+Node *insert(Node *head, int data){//returning new head
     if(head == NULL || data >= head->data){
-        now->next = head;
-        return now;
+        return genNode(head, data);
     }
     head->next = insert(head->next, data);
     return head;
 }
 Node *del(Node *head, int data){
-    if(head == NULL)
-        return NULL;
+    if(head == NULL || head->data < data)
+        return head;
 
-    Node *tmp;
     if(head->data == data){
-        tmp = head->next;
+        Node *tmp = head->next;
         free(head);
         return tmp;
     }
-    else if(head->data > data)
-        head->next = del(head->next, data);
+    head->next = del(head->next, data);
     return head;
 }
 void slow(Node *head, int data){
