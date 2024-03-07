@@ -17,36 +17,34 @@ void initList(skipList *list){
     Node *header = (Node *) malloc(sizeof(Node));
     list->header = header;
     header->key = INT_MAX;
-    header->forward = (Node **) malloc(sizeof(Node*) * (MAXLAYER + 1));
-    for (int i = 0; i < MAXLAYER; i++) {
+    header->forward = (Node **) malloc(sizeof(Node*) * (MAXLAYER));
+    for(int i = 0; i < MAXLAYER; i++)
         header->forward[i] = NULL;
-    }
- 
     list->level = 0;
 }
 void fastGet(skipList *list, int key){
     Node *node = list->header;
-    int flag = 1;
+    int noprint = 1;
     for(int i = list->level; i >= 0; i--){
-        if(node->key != INT_MAX) printf("%d ", node->key);
+        if(node != list->header) printf("%d ", node->key);
         while(node->forward[i] && key <= node->forward[i]->key){
             printf("%d ", node->forward[i]->key);
             node = node->forward[i];
-            flag = 0;
+            noprint = 0;
         }
     }
-    if(flag) printf("-1");
+    if(noprint) printf("-1");
     printf("\n");
 }
 void slowGet(skipList *list, int key){
     Node *node = list->header;
-    int flag = 1;
+    int noprint = 1;
     while(node->forward[0] && key <= node->forward[0]->key){
         printf("%d ", node->forward[0]->key);
         node = node->forward[0];
-        flag = 0;
+        noprint = 0;
     }
-    if(flag) printf("-1");
+    if(noprint) printf("-1");
     printf("\n");
 }
 void printList(skipList *list){
@@ -63,7 +61,7 @@ void printList(skipList *list){
 }
 void insert(skipList *list, int key){
     Node *node = list->header;
-    Node *previous[MAXLAYER + 1] = {list->header};
+    Node *previous[MAXLAYER] = {};
     for(int i = list->level; i >= 0; i--){
         while(node->forward[i] && node->forward[i]->key > key)
             node = node->forward[i];
@@ -83,7 +81,7 @@ void insert(skipList *list, int key){
 }
 void del(skipList *list, int key){
     Node *node = list->header;
-    Node *previous[MAXLAYER + 1] = {0};
+    Node *previous[MAXLAYER] = {0};
     for(int i = list->level; i >= 0; i--){
         while(node->forward[i] && node->forward[i]->key > key)
             node = node->forward[i];
