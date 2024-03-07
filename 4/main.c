@@ -1,59 +1,118 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#define MAXLAYER 65
 typedef struct Node{
-    long long data;
-    struct Node *next;
+    struct Node **forward;
+    long long key;
 }Node;
-Node *genNode(Node *next, long long data){
-    Node *now = (Node *)malloc(sizeof(Node));
-    now->data = data, now->next = next;
-    return now;
+typedef struct skipList{
+    int level;
+    Node* header;
+}skipList;
+int coinFlip(int layer, long long key) {
+    return (layer == 0 || (key / (1ll << (layer - 1))) & 1);
 }
-Node *insert(Node *head, long long data){//returning new head
-    if(head == NULL || data >= head->data){
-        return genNode(head, data);
-    }
-    head->next = insert(head->next, data);
-    return head;
+void initList(skipList *list){
+    Node *header = (Node *) malloc(sizeof(Node));
+    list->header = header;
+    header->key = INT_MAX;
+    header->forward = (Node **) malloc(sizeof(Node*) * (MAXLAYER));
+    for(int i = 0; i < MAXLAYER; i++)
+        header->forward[i] = NULL;
+    list->level = 0;
 }
-Node *del(Node *head, long long data){
-    if(head == NULL || head->data < data)
-        return head;
-
-    if(head->data == data){
-        Node *tmp = head->next;
-        free(head);
-        return tmp;
+void fastGet(skipList *list, long long key){
+    Node *node = list->header;
+    int noprint = 1;
+    for(int i = list->level; i >= 0; i--){
+        if(node != list->header) printf("%lld ", node->key);
+        while(node->forward[i] && key <= node->forward[i]->key){
+            printf("%lld ", node->forward[i]->key);
+            node = node->forward[i];
+            noprint = 0;
+        }
     }
-    head->next = del(head->next, data);
-    return head;
-}
-void slow(Node *head, long long data){
-    if(head == NULL || head->data < data){
-        printf("-1\n");
-        return;
-    }
-    Node *cur = head;
-    while(cur && cur->data >= data){
-        printf("%lld ", cur->data);
-        cur = cur->next;
-    }
+    if(noprint) printf("-1");
     printf("\n");
 }
+void slowGet(skipList *list, long long key){
+    Node *node = list->header;
+    int noprint = 1;
+    while(node->forward[0] && key <= node->forward[0]->key){
+        printf("%lld ", node->forward[0]->key);
+        node = node->forward[0];
+        noprint = 0;
+    }
+    if(noprint) printf("-1");
+    printf("\n");
+}
+void printList(skipList *list){
+    for(int i = list->level; i >= 0; i--){
+        Node *node = list->header;
+        printf("Layer %d: ", i);
+        while(node->forward[i]){
+            printf("%lld ", node->forward[i]->key);
+            node = node->forward[i];
+        }
+        printf("\n");
+    }
+    printf("-----\n");
+}
+void insert(skipList *list, long long key){
+    Node *node = list->header;
+    Node *previous[MAXLAYER] = {};
+    for(int i = list->level; i >= 0; i--){
+        while(node->forward[i] && node->forward[i]->key > key)
+            node = node->forward[i];
+        previous[i] = node;
+    }
+    node = (Node*)malloc(sizeof(Node));
+    node->key = key;
+    node->forward = (Node**)malloc(sizeof(Node*) * (MAXLAYER));
+    for(int i = 0; i <= list->level && coinFlip(i, key); i++){
+        if(i == list->level && coinFlip(i + 1, key)){
+            previous[list->level + 1] = list->header;
+            list->level += 1;
+        }
+        node->forward[i] = previous[i]->forward[i];
+        previous[i]->forward[i] = node;
+    }
+}
+void del(skipList *list, long long key){
+    Node *node = list->header;
+    Node *previous[MAXLAYER] = {};
+    for(int i = list->level; i >= 0; i--){
+        while(node->forward[i] && node->forward[i]->key > key)
+            node = node->forward[i];
+        previous[i] = node;
+    }
+    node = node->forward[0];
+    if(node && node->key == key){
+        for(int i = 0; i <= list->level; i++){
+            if(previous[i]->forward[i] != node)
+                break;
+            previous[i]->forward[i] = node->forward[i];
+        }
+        free(node);
+        if(list->level > 0 && list->header->forward[list->level] == NULL)
+            list->level -= 1;
+    }
+}
 int main(){
+    skipList list;
+    initList(&list);
     int m, t;
     long long k;
     scanf("%d", &m);
-    Node *head = NULL;
     for(int i = 0; i < m; i++){
         scanf("%d%lld", &t, &k);
-        if(t == 1)
-            slow(head, k);
-        else if(t == 3)
-            head = insert(head, k);
-        else if(t == 4)
-            head = del(head, k);
-        else break;
+        if(t == 1) slowGet(&list, k);
+        else if(t == 2) fastGet(&list, k);
+        else if(t == 3) insert(&list, k);
+        else del(&list, k);
+        #ifdef debug
+        printList(&list);
+        #endif
     }
-    return 0;
 }
