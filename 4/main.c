@@ -115,4 +115,6 @@ int main(){
         printList(&list);
         #endif
     }
+    free(list.header->forward);
+    free(list.header);
 }
