@@ -60,6 +60,9 @@ void insert(skipList *list, long long key){
     free(previous);
 }
 void delete(skipList *list, long long key){
+    #ifdef debug
+    printf("try delete %lld\n", key);
+    #endif
     Node **previous = (Node**)malloc(sizeof(Node*) * (list->layer + 1));
     int i = list->layer;
     Node *node = list->heads[list->layer];
@@ -69,7 +72,7 @@ void delete(skipList *list, long long key){
         previous[i] = node;
         i--;
         node = node->below;
-    }
+    }//i > 0
     while(node->next && node->next->key > key){
         node = node->next;
     }
@@ -78,6 +81,9 @@ void delete(skipList *list, long long key){
     , while node->next will either be NULL or <= key
     */
     previous[0] = node;
+    #ifdef debug
+    printf("previous[0]->key = %lld\n", previous[0]->key);
+    #endif
     node = node->next;
     if(node && node->key == key){
         for(int i = 0; i <= list->layer; i++){
@@ -89,7 +95,7 @@ void delete(skipList *list, long long key){
         while(list->layer > 0 && list->heads[list->layer]->next == NULL)
             list->layer -= 1;
     }
-    free(node);
+    //free(node);
     free(previous);
 }
 void fastGet(skipList *list, long long key){
@@ -150,4 +156,5 @@ int main(){
         printList(&list);
         #endif
     }
+    free(list.heads);
 }
