@@ -95,7 +95,7 @@ void delete(skipList *list, long long key){
         while(list->layer > 0 && list->heads[list->layer]->next == NULL)
             list->layer -= 1;
     }
-    //free(node);
+    if(node && node->key == key) free(node);
     free(previous);
 }
 void fastGet(skipList *list, long long key){
