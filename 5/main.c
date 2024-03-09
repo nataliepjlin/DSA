@@ -83,7 +83,7 @@ int main(){
         else if(op == 2) op2++;
         else{//op == 3
             scanf("%lld", &q);
-            if(q > powers[0]){
+            if(q > powers[0] + op2 * (n - 1)){
                 printf("0 0\n");
                 continue;
             }
