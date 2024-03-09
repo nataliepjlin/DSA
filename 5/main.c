@@ -53,6 +53,7 @@ int main(){
         scanf("%d", &op);
         if(op == 4){
             scanf("%d%d", &a, &b);
+            if(b != m) break;
             a--;
             printf("%lld\n", list.info[a]->right->preSum - list.info[a]->left->preSum);
         }
