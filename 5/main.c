@@ -83,6 +83,10 @@ int main(){
         else if(op == 2) op2++;
         else{//op == 3
             scanf("%lld", &q);
+            if(q > powers[0]){
+                printf("0 0\n");
+                continue;
+            }
             int low = 0, high = n - 1, rnk = -1;
             while(low <= high){
                 int mid = (low + high) >> 1;
@@ -92,8 +96,7 @@ int main(){
                 }
                 else high = mid - 1;
             }
-            if(rnk == -1) printf("0 0\n");
-            else printf("%d %d\n", rnk + 1, ids[rnk] + 1);
+            printf("%d %d\n", rnk + 1, ids[rnk] + 1);
         }
         #ifdef debug
         printf("\n%dth task:\n", i);
