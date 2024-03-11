@@ -103,6 +103,6 @@ int main(){
         for(int j = 1; j <= list.info[i]->cnt; j++)
             printf(" %lld", list.info[i]->arr[j]->preSum - list.info[i]->arr[j - 1]->preSum);
         printf("\n");
-        // free(list.info[i]->arr);
+        free(list.info[i]->arr);
     }
 }
