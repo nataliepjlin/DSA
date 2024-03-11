@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 typedef struct Node{
     long long preSum;
 }Node;
 typedef struct Info{
-    Node **head;
+    Node **arr;
     int cnt;//attack
 }Info;
 typedef struct BigInfo{
@@ -19,21 +20,20 @@ void initInfo(BigInfo *list, const int n, const int m){
     list->info = (Info**)malloc(sizeof(Info*) * n);
     for(int i = 0; i < n; i++){
         list->info[i] = (Info*)malloc(sizeof(Info));
-        list->info[i]->head = (Node**)malloc(sizeof(Node*) * (m + 1));
-        list->info[i]->head[0] = genNode(0ll);
+        list->info[i]->arr = (Node**)malloc(sizeof(Node*) * (m + 1));
+        list->info[i]->arr[0] = genNode(0ll);
         list->info[i]->cnt = 0;
     }
 }
-void extendInfo(Info *info, long long powDiff){
-    Node *newNode = genNode(info->head[info->cnt]->preSum + powDiff);
+void extendInfo(Info *info, long long powDiff, const int m){
     info->cnt += 1;
-    info->head[info->cnt] = newNode;
+    info->arr[info->cnt] = genNode(info->arr[info->cnt - 1]->preSum + powDiff);
 }
 int main(){
     int n, t, m;
     scanf("%d%d%d", &n, &t, &m);
     BigInfo list;//info with player's id
-    initInfo(&list, n, m);
+    initInfo(&list, n, t);
     long long powers[n];//power of ith ranking player
     int rank[n];//use id to find rank
     int ids[n];//use rank to find id
@@ -49,28 +49,24 @@ int main(){
             scanf("%d%d", &a, &b);
             a--;
             int idx = list.info[a]->cnt;
-            if(b >= idx) printf("%lld\n", list.info[a]->head[idx]->preSum);
-            else{
-                #ifdef debug
-                printf("idx = %d, b = %d, idx - b = %d\n", idx, b, idx - b);
-                #endif
-                printf("%lld\n", list.info[a]->head[idx]->preSum - list.info[a]->head[idx - b]->preSum);
-            }
+            if(idx <= b) printf("%lld\n", list.info[a]->arr[idx]->preSum);
+            else printf("%lld\n", list.info[a]->arr[idx]->preSum - list.info[a]->arr[idx - b]->preSum);
         }
         else if(op == 1){
             scanf("%d", &a);
             a--;
             int rankA = rank[a];
-            if(rankA == 0){
-                #ifdef debug
-                printf("rank of %d is already at top\n", a);
-                #endif
-            }
-            else{
+            if(rankA != 0){
                 int prevID = ids[rankA - 1];
+                #ifdef debug
+                printf("swap player %d and %d's ranking\n", prevID, a);
+                #endif
                 long long powDiff = (powers[rankA - 1] - powers[rankA]) + op2;
                 powers[rankA] += powDiff;
-                extendInfo(list.info[a], powDiff);
+                extendInfo(list.info[a], powDiff, m);
+                #ifdef debug
+                printf("player %d gain pow %lld\n", a, powDiff);
+                #endif
                 rank[a]--, rank[prevID]++;
                 ids[rankA - 1] = a, ids[rankA] = prevID;
             }
@@ -103,14 +99,10 @@ int main(){
     }
     printf("\n");
     for(int i = 0; i < n; i++){//second part
-        if(!list.info[i]->cnt){
-            printf("0\n");
-            continue;
-        }
         printf("%d", list.info[i]->cnt);
-        for(int j = 1; j <= list.info[i]->cnt; j++){
-            printf(" %lld", list.info[i]->head[j]->preSum - list.info[i]->head[j - 1]->preSum);
-        }
+        for(int j = 1; j <= list.info[i]->cnt; j++)
+            printf(" %lld", list.info[i]->arr[j]->preSum - list.info[i]->arr[j - 1]->preSum);
         printf("\n");
+        // free(list.info[i]->arr);
     }
 }
