@@ -70,7 +70,7 @@ int main(){
                 int prevID = ids[rankA - 1];
                 long long powDiff = (powers[rankA - 1] - powers[rankA]) + op2;
                 powers[rankA] += powDiff;
-                extendInfo(list.info[a], powDiff);
+                extendInfo(list.info[a], powDiff, m);
                 rank[a]--, rank[prevID]++;
                 ids[rankA - 1] = a, ids[rankA] = prevID;
             }
