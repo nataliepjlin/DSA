@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#define MAXM 5 * 1e5 + 1
 typedef struct Node{
     long long preSum;
-    struct Node *next;
 }Node;
 typedef struct Info{
-    Node *head;
-    Node *left, *right;
+    Node **head;
     int cnt;//attack
 }Info;
 typedef struct BigInfo{
@@ -15,25 +13,28 @@ typedef struct BigInfo{
 }BigInfo;
 Node *genNode(long long data){
     Node *node = (Node*)malloc(sizeof(Node));
-    node->preSum = data, node->next = NULL;
+    node->preSum = data;
     return node;
 }
 void initInfo(BigInfo *list, const int n){
     list->info = (Info**)malloc(sizeof(Info*) * n);
     for(int i = 0; i < n; i++){
         list->info[i] = (Info*)malloc(sizeof(Info));
-        list->info[i]->head = genNode(0ll);
-        list->info[i]->left = list->info[i]->head;
-        list->info[i]->right = list->info[i]->head;
+        list->info[i]->head = (Node**)malloc(sizeof(Node*) * MAXM);
+        list->info[i]->head[0] = genNode(0ll);
+        #ifdef debug
+        printf("list->info[%d]->head[0] = %lld\n", i, list->info[i]->head[0]->preSum);
+        #endif
         list->info[i]->cnt = 0;
     }
 }
 void extendInfo(Info *info, long long powDiff, const int m){
-    Node *newNode = genNode(info->right->preSum + powDiff);
-    info->right->next = newNode;
-    info->right = info->right->next;
-    if(info->cnt >= m) info->left = info->left->next;
+    Node *newNode = genNode(info->head[info->cnt]->preSum + powDiff);
     info->cnt += 1;
+    info->head[info->cnt] = newNode;
+    #ifdef debug
+    printf("info->head[%d] = %lld\n", info->cnt, info->head[info->cnt]->preSum);
+    #endif
 }
 int main(){
     int n, t, m;
@@ -53,9 +54,10 @@ int main(){
         scanf("%d", &op);
         if(op == 4){
             scanf("%d%d", &a, &b);
-            if(b != m) break;
             a--;
-            printf("%lld\n", list.info[a]->right->preSum - list.info[a]->left->preSum);
+            int idx = list.info[a]->cnt;
+            if(b > idx) printf("%lld\n", list.info[a]->head[idx]->preSum);
+            else printf("%lld\n", list.info[a]->head[idx]->preSum - list.info[a]->head[idx - b]->preSum);
         }
         else if(op == 1){
             scanf("%d", &a);
@@ -114,9 +116,8 @@ int main(){
             continue;
         }
         printf("%d", list.info[i]->cnt);
-        while(list.info[i]->head->next){
-            printf(" %lld", list.info[i]->head->next->preSum - list.info[i]->head->preSum);
-            list.info[i]->head = list.info[i]->head->next;
+        for(int j = 1; j <= list.info[i]->cnt; j++){
+            printf(" %lld", list.info[i]->head[j]->preSum - list.info[i]->head[j - 1]->preSum);
         }
         printf("\n");
     }
