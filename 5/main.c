@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define MAXM 5 * 1e5 + 1
+#define MAXM 5 * 1e5 + 5
 typedef struct Node{
     long long preSum;
 }Node;
