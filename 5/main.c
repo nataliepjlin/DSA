@@ -3,10 +3,11 @@
 #include <assert.h>
 typedef struct Node{
     long long preSum;
+    struct Node *next;
 }Node;
 typedef struct Info{
-    Node **arr;
-    Node *cur;
+    Node *head;
+    Node *left, *right;
     int cnt;//attack
 }Info;
 typedef struct BigInfo{
@@ -14,27 +15,34 @@ typedef struct BigInfo{
 }BigInfo;
 Node *genNode(long long data){
     Node *node = (Node*)malloc(sizeof(Node));
-    node->preSum = data;
+    node->preSum = data, node->next = NULL;
     return node;
 }
-void initInfo(BigInfo *list, const int n, const int t){
+void initInfo(BigInfo *list, const int n){
     list->info = (Info**)malloc(sizeof(Info*) * n);
     for(int i = 0; i < n; i++){
         list->info[i] = (Info*)malloc(sizeof(Info));
-        list->info[i]->arr = (Node**)malloc(sizeof(Node*) * (t + 1));
-        list->info[i]->arr[0] = genNode(0ll);
+        list->info[i]->head = genNode(0ll);
+        list->info[i]->left = list->info[i]->head;
+        list->info[i]->right = list->info[i]->head;
         list->info[i]->cnt = 0;
     }
 }
 void extendInfo(Info *info, long long powDiff, const int m){
+    Node *newNode = genNode(info->right->preSum + powDiff);
+    info->right->next = newNode;
+    info->right = info->right->next;
+    if(info->cnt >= m) info->left = info->left->next;
     info->cnt += 1;
-    info->arr[info->cnt] = genNode(info->arr[info->cnt - 1]->preSum + powDiff);
+}
+int min(int a, int b){
+    return a < b ? a : b;
 }
 int main(){
     int n, t, m;
     scanf("%d%d%d", &n, &t, &m);
     BigInfo list;//info with player's id
-    initInfo(&list, n, t);
+    initInfo(&list, n);
     long long powers[n];//power of ith ranking player
     int rank[n];//use id to find rank
     int ids[n];//use rank to find id
@@ -49,9 +57,19 @@ int main(){
         if(op == 4){
             scanf("%d%d", &a, &b);
             a--;
-            int idx = list.info[a]->cnt;
-            if(idx <= b) printf("%lld\n", list.info[a]->arr[idx]->preSum);
-            else printf("%lld\n", list.info[a]->arr[idx]->preSum - list.info[a]->arr[idx - b]->preSum);
+            if(b == m || b >= list.info[a]->cnt){
+                printf("%lld\n", list.info[a]->right->preSum - list.info[a]->left->preSum);
+            }
+            else{
+                #ifdef debug
+                printf("b = %d, m = %d, list.info[a]->cnt = %d\n", b, m, list.info[a]->cnt);
+                #endif
+                int step = min(m, list.info[a]->cnt) - b, fastStep = step >> 1;
+                Node *tmpLeft = list.info[a]->left;
+                while(fastStep) tmpLeft = tmpLeft->next->next;
+                if(step & 1) tmpLeft = tmpLeft->next;
+                printf("%lld\n", list.info[a]->right->preSum - tmpLeft->preSum);
+            }
         }
         else if(op == 1){
             scanf("%d", &a);
@@ -65,9 +83,6 @@ int main(){
                 long long powDiff = (powers[rankA - 1] - powers[rankA]) + op2;
                 powers[rankA] += powDiff;
                 extendInfo(list.info[a], powDiff, m);
-                #ifdef debug
-                printf("player %d gain pow %lld\n", a, powDiff);
-                #endif
                 rank[a]--, rank[prevID]++;
                 ids[rankA - 1] = a, ids[rankA] = prevID;
             }
@@ -100,11 +115,15 @@ int main(){
     }
     printf("\n");
     for(int i = 0; i < n; i++){//second part
+        if(!list.info[i]->cnt){
+            printf("0\n");
+            continue;
+        }
         printf("%d", list.info[i]->cnt);
-        for(int j = 1; j <= list.info[i]->cnt; j++)
-            printf(" %lld", list.info[i]->arr[j]->preSum - list.info[i]->arr[j - 1]->preSum);
+        while(list.info[i]->head->next){
+            printf(" %lld", list.info[i]->head->next->preSum - list.info[i]->head->preSum);
+            list.info[i]->head = list.info[i]->head->next;
+        }
         printf("\n");
-        free(list.info[i]->arr);
     }
-    free(list.info);
 }
