@@ -3,7 +3,7 @@
 #include <assert.h>
 typedef struct Node{
     long long preSum;
-    struct Node *next;
+    struct Node *next, *prev;
 }Node;
 typedef struct Info{
     Node *head;
@@ -15,7 +15,7 @@ typedef struct BigInfo{
 }BigInfo;
 Node *genNode(long long data){
     Node *node = (Node*)malloc(sizeof(Node));
-    node->preSum = data, node->next = NULL;
+    node->preSum = data, node->next = NULL, node->prev = NULL;
     return node;
 }
 void initInfo(BigInfo *list, const int n){
@@ -31,6 +31,7 @@ void initInfo(BigInfo *list, const int n){
 void extendInfo(Info *info, long long powDiff, const int m){
     Node *newNode = genNode(info->right->preSum + powDiff);
     info->right->next = newNode;
+    newNode->prev = info->right;
     info->right = info->right->next;
     if(info->cnt >= m) info->left = info->left->next;
     info->cnt += 1;
@@ -61,19 +62,41 @@ int main(){
                 printf("%lld\n", list.info[a]->right->preSum - list.info[a]->left->preSum);
             }
             else{
+                int step = min(m, list.info[a]->cnt) - b;
                 #ifdef debug
-                printf("b = %d, m = %d, list.info[a]->cnt = %d\n", b, m, list.info[a]->cnt);
+                printf("step = %d\n", step);
                 #endif
-                int step = min(m, list.info[a]->cnt) - b, tenStep = step / 10;
-                Node *tmpLeft = list.info[a]->left;
-                for(int i = 0; i < tenStep; i++)
-                    tmpLeft = tmpLeft->next->next->next->next->next->next->next->next->next->next;
-                step %= 10;
-                int twoStep = step >> 1;
-                for(int i = 0; i < twoStep; i++)
-                    tmpLeft = tmpLeft->next->next;
-                if(step & 1) tmpLeft = tmpLeft->next;
-                printf("%lld\n", list.info[a]->right->preSum - tmpLeft->preSum);
+                if(step > (m >> 1)){
+                    #ifdef debug
+                    printf("starting from right will be faster\n");
+                    #endif
+                    step -= (m >> 1);
+                    int tenStep = step / 10;
+                    Node *tmpLeft = list.info[a]->right;
+                    for(int i = 0; i < tenStep; i++)
+                        tmpLeft = tmpLeft->prev->prev->prev->prev->prev->prev->prev->prev->prev->prev;
+                    step %= 10;
+                    int twoStep = step >> 1;
+                    for(int i = 0; i < twoStep; i++)
+                        tmpLeft = tmpLeft->prev->prev;
+                    if(step & 1) tmpLeft = tmpLeft->prev;
+                    printf("%lld\n", list.info[a]->right->preSum - tmpLeft->preSum);
+                }
+                else{
+                    #ifdef debug
+                    printf("starting from left will be faster\n");
+                    #endif
+                    int tenStep = step / 10;
+                    Node *tmpLeft = list.info[a]->left;
+                    for(int i = 0; i < tenStep; i++)
+                        tmpLeft = tmpLeft->next->next->next->next->next->next->next->next->next->next;
+                    step %= 10;
+                    int twoStep = step >> 1;
+                    for(int i = 0; i < twoStep; i++)
+                        tmpLeft = tmpLeft->next->next;
+                    if(step & 1) tmpLeft = tmpLeft->next;
+                    printf("%lld\n", list.info[a]->right->preSum - tmpLeft->preSum);
+                }
             }
         }
         else if(op == 1){
@@ -82,9 +105,6 @@ int main(){
             int rankA = rank[a];
             if(rankA != 0){
                 int prevID = ids[rankA - 1];
-                #ifdef debug
-                printf("swap player %d and %d's ranking\n", prevID, a);
-                #endif
                 long long powDiff = (powers[rankA - 1] - powers[rankA]) + op2;
                 powers[rankA] += powDiff;
                 extendInfo(list.info[a], powDiff, m);
