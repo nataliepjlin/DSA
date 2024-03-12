@@ -11,13 +11,14 @@ Node *genNode(int data){
 }
 void floydCycle(Node *head){
     Node *fast = head, *slow = head;
+    printf("%d", fast->data);
     while(fast && fast->next){
-        printf("%d ", fast->data);
         fast = fast->next->next;
+        if(fast) printf(" %d", fast->data);
         slow = slow->next;
         if(fast == slow){
-            printf("%d", fast->data);
-            break;
+            printf("\n");
+            return;
         }
     }
     printf("\n");
