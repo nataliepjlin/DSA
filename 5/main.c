@@ -6,6 +6,7 @@ typedef struct Node{
 }Node;
 typedef struct Info{
     Node **arr;
+    Node *cur;
     int cnt;//attack
 }Info;
 typedef struct BigInfo{
@@ -16,11 +17,11 @@ Node *genNode(long long data){
     node->preSum = data;
     return node;
 }
-void initInfo(BigInfo *list, const int n, const int m){
+void initInfo(BigInfo *list, const int n, const int t){
     list->info = (Info**)malloc(sizeof(Info*) * n);
     for(int i = 0; i < n; i++){
         list->info[i] = (Info*)malloc(sizeof(Info));
-        list->info[i]->arr = (Node**)malloc(sizeof(Node*) * (m + 1));
+        list->info[i]->arr = (Node**)malloc(sizeof(Node*) * (t + 1));
         list->info[i]->arr[0] = genNode(0ll);
         list->info[i]->cnt = 0;
     }
@@ -105,4 +106,5 @@ int main(){
         printf("\n");
         free(list.info[i]->arr);
     }
+    free(list.info);
 }
