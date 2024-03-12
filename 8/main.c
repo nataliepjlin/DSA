@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#define N 100001
 typedef struct Node{
     int data;
     struct Node *next;
@@ -17,8 +18,7 @@ void floydCycle(Node *head){
         if(fast) printf(" %d", fast->data);
         slow = slow->next;
         if(fast == slow){
-            printf("\n");
-            return;
+            break;
         }
     }
     printf("\n");
@@ -26,8 +26,8 @@ void floydCycle(Node *head){
 int main(){
     int n, data;
     scanf("%d", &n);
-    int *nextIdx = malloc(sizeof(int) * n);
-    Node** nodes = malloc(sizeof(Node*) * n);
+    int nextIdx[N];
+    Node* nodes[N];
     for(int i = 0; i < n; i++){
         scanf("%d%d", &data, &nextIdx[i]);
         nextIdx[i]--;
@@ -45,6 +45,4 @@ int main(){
         }
     }
     floydCycle(nodes[0]);
-    free(nodes);
-    free(nextIdx);
 }
