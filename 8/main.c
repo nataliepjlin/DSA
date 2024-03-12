@@ -24,8 +24,8 @@ void floydCycle(Node *head){
 int main(){
     int n, data;
     scanf("%d", &n);
-    int nextIdx[n];
-    Node* nodes[n];
+    int *nextIdx = malloc(sizeof(int) * n);
+    Node** nodes = malloc(sizeof(Node*) * n);
     for(int i = 0; i < n; i++){
         scanf("%d%d", &data, &nextIdx[i]);
         nextIdx[i]--;
@@ -43,4 +43,6 @@ int main(){
         }
     }
     floydCycle(nodes[0]);
+    free(nodes);
+    free(nextIdx);
 }
