@@ -64,9 +64,13 @@ int main(){
                 #ifdef debug
                 printf("b = %d, m = %d, list.info[a]->cnt = %d\n", b, m, list.info[a]->cnt);
                 #endif
-                int step = min(m, list.info[a]->cnt) - b, fastStep = step >> 1;
+                int step = min(m, list.info[a]->cnt) - b, tenStep = step / 10;
                 Node *tmpLeft = list.info[a]->left;
-                for(int i = 0; i < fastStep; i++)
+                for(int i = 0; i < tenStep; i++)
+                    tmpLeft = tmpLeft->next->next->next->next->next->next->next->next->next->next;
+                step %= 10;
+                int twoStep = step >> 1;
+                for(int i = 0; i < twoStep; i++)
                     tmpLeft = tmpLeft->next->next;
                 if(step & 1) tmpLeft = tmpLeft->next;
                 printf("%lld\n", list.info[a]->right->preSum - tmpLeft->preSum);
