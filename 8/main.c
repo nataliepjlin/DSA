@@ -7,6 +7,7 @@ typedef struct Node{
 Node *genNode(int data){
     Node *node = (Node*)malloc(sizeof(Node));
     node->data = data, node->next = NULL;
+    return node;
 }
 void floydCycle(Node *head){
     Node *fast = head, *slow = head;
