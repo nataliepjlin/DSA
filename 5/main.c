@@ -66,7 +66,8 @@ int main(){
                 #endif
                 int step = min(m, list.info[a]->cnt) - b, fastStep = step >> 1;
                 Node *tmpLeft = list.info[a]->left;
-                while(fastStep) tmpLeft = tmpLeft->next->next;
+                for(int i = 0; i < fastStep; i++)
+                    tmpLeft = tmpLeft->next->next;
                 if(step & 1) tmpLeft = tmpLeft->next;
                 printf("%lld\n", list.info[a]->right->preSum - tmpLeft->preSum);
             }
