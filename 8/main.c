@@ -11,12 +11,12 @@ int main(){
         next[i]--;
     }
     int fastIdx = 0, slowIdx = 0;
-    printf("%d", data[0]);
     while(fastIdx != -1 && next[fastIdx] != -1){
-        fastIdx = next[next[fastIdx]];
-        if(fastIdx != -1) printf(" %d", data[fastIdx]);
+        printf("%d ", data[fastIdx]);
+        fastIdx = next[next[fastIdx]]; 
         slowIdx = next[slowIdx];
         if(fastIdx == slowIdx) break;
     }
+    if(fastIdx != -1) printf("%d", data[fastIdx]);
     printf("\n");
 }
