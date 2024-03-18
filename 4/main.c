@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <stdbool.h>
-#define MAXLAYER 65
+#define MAXLAYER 61
 typedef struct Node{
     struct Node *next, *below;
     long long key;
