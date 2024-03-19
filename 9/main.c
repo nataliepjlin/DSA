@@ -33,7 +33,8 @@ char pop(Stack *st){
     return c;
 }
 int priorty(char c){
-    if(c == '*' || c == '/' || c == '%') return 2;
+    if(c == '*' || c == '/') return 3;
+    else if(c == '%') return 2;
     else if(c == '+' || c == '-') return 1;
     return -1;
 }
