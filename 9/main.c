@@ -31,7 +31,7 @@ bool isEmpty(Stack *st){
     return !(st->size);
 }
 char pop(Stack *st){
-    // if(!st->size) return 0;
+    if(!st->size) return 0;
     st->size -= 1;
     char c = st->head->data;
     st->head = (st->head)->next;
