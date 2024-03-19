@@ -3,17 +3,15 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#define MAX 4001
+#define MAX 4025
 typedef struct Node{
     char data;
     struct Node* next;
 }Node;
 typedef struct Stack{
-    int size;
     Node *head;
 }Stack;
 void initStack(Stack *st){
-    st->size = 0;
     st->head = NULL;
 }
 Node* genNode(char tok){
@@ -23,16 +21,11 @@ Node* genNode(char tok){
 }
 void push(Stack *st, char tok){
     Node *newNode = genNode(tok);
-    st->size += 1;
     newNode->next = st->head;
     st->head = newNode;
 }
-bool isEmpty(Stack *st){
-    return !(st->size);
-}
 char pop(Stack *st){
-    if(!st->size) return 0;
-    st->size -= 1;
+    if(st->head == NULL) return 0;
     char c = st->head->data;
     st->head = (st->head)->next;
     return c;
@@ -53,22 +46,24 @@ void infixToPostfix(char *infix, char postfix[]){
         }
         else if(infix[i] == '(') push(&st, infix[i]);
         else if(infix[i] == ')'){
-            while(!isEmpty(&st) && st.head->data != '('){
+            while(st.head && st.head->data != '('){
                 char chr[2]; chr[0] = pop(&st), chr[1] = 0;
                 strcat(postfix, chr);
             }
             pop(&st);
         }
         else{
-            while(!isEmpty(&st) && priorty(infix[i]) <= priorty(st.head->data)){
-                char chr[2]; chr[0] = pop(&st), chr[1] = 0;
+            while(st.head && priorty(infix[i]) <= priorty(st.head->data)){
+                char chr[2]; 
+                chr[0] = pop(&st), chr[1] = 0;
                 strcat(postfix, chr);
             }
             push(&st, infix[i]);
         }
     }
-    while(!isEmpty(&st)){
-        char chr[2]; chr[0] = pop(&st), chr[1] = 0;
+    while(st.head){
+        char chr[2]; 
+        chr[0] = pop(&st), chr[1] = 0;
         strcat(postfix, chr);
     }
 }
@@ -77,25 +72,21 @@ typedef struct numNode{
     struct numNode* next;
 }numNode;
 typedef struct numStack{
-    int size;
     numNode *head;
 }numStack;
 void initNumStack(numStack *st){
-    st->size = 0;
-    st->head = 0;
+    st->head = NULL;
 }
 void numPush(numStack *st, long long num){
     numNode *node = (numNode*)malloc(sizeof(numNode));
     node->data = num, node->next = st->head;
     st->head = node;
-    st->size += 1;
     return;
 }
 long long numPop(numStack *st){
-    if(!st->size) return 0;
+    if(st->head == NULL) return 0;
     long long num = st->head->data;
     st->head = st->head->next;
-    st->size -= 1;
     return num;
 }
 long long Calc(long long n1, char tok, long long n2){
@@ -126,11 +117,11 @@ long long Eval(char *postfix){
 int main(){
     char infix[MAX];
     char postfix[MAX] = {0};
-    while(scanf("%s", infix) != EOF){
+    for(int i = 0; i < 3; i++){
+        scanf("%s", infix);
         infixToPostfix(infix, postfix);
         printf("%s=", postfix);
-        printf("%lld", Eval(postfix));
-        printf("\n");
+        printf("%lld\n", Eval(postfix));
         memset(infix, 0, MAX);
         memset(postfix, 0, MAX);
     }
