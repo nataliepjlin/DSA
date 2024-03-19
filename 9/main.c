@@ -27,7 +27,9 @@ void push(Stack *st, char tok){
 char pop(Stack *st){
     if(st->head == NULL) return 0;
     char c = st->head->data;
-    st->head = (st->head)->next;
+    Node *nxt = (st->head)->next;
+    free(st->head);
+    st->head = nxt;
     return c;
 }
 int priorty(char c){
@@ -86,15 +88,17 @@ void numPush(numStack *st, long long num){
 long long numPop(numStack *st){
     if(st->head == NULL) return 0;
     long long num = st->head->data;
-    st->head = st->head->next;
+    numNode *nxt = st->head->next;
+    free(st->head);
+    st->head = nxt;
     return num;
 }
 long long Calc(long long n1, char tok, long long n2){
-    if(tok == '+') return n1 + n2;
+    if(tok == '%' && n2 != 0) return n1 % n2;
     else if (tok == '-') return n1 - n2;
     else if (tok == '*') return n1 * n2;
-    else if(tok == '/') return n1 / n2;
-    else return n1 % n2;
+    else if(tok == '/' && n2 != 0) return n1 / n2;
+    else return n1 + n2;
 }
 long long Eval(char *postfix){
     numStack st;
@@ -106,9 +110,6 @@ long long Eval(char *postfix){
             long long n2 = numPop(&st);
             long long n1 = numPop(&st);
             long long res = Calc(n1, postfix[i], n2);
-            #ifdef debug
-            printf("tmp res = %lld\n", res);
-            #endif
             numPush(&st, res);
         }
     }
@@ -116,13 +117,12 @@ long long Eval(char *postfix){
 }
 int main(){
     char infix[MAX];
-    char postfix[MAX] = {0};
+    char postfix[MAX];
     for(int i = 0; i < 3; i++){
         scanf("%s", infix);
+        memset(postfix, 0, MAX);
         infixToPostfix(infix, postfix);
         printf("%s=", postfix);
         printf("%lld\n", Eval(postfix));
-        memset(infix, 0, MAX);
-        memset(postfix, 0, MAX);
     }
 }
