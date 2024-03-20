@@ -6,7 +6,7 @@
 enum Type{num, op};
 typedef struct Token{
     int type;
-    char data[6];
+    char data[20];
     struct Token *next;
 }Token;
 typedef struct numNode{
@@ -41,18 +41,19 @@ int priorty(char c){
 }
 Token* genTok(char *str, int type){
     Token *nt = (Token*)malloc(sizeof(Token));
+    memset(nt->data, 0, sizeof(nt->data));
     strcpy(nt->data, str);
     nt->type = type;
     nt->next = NULL;
     return nt;
 }
-Token* f1(char *infix){
+Token* inToPost(char *infix){
     charNode *st = NULL;
     Token *post = genTok("", -1), *cur = post;
     int len = strlen(infix), i = 0;
     while(i < len){
         if(isdigit(infix[i])){
-            char str[6] = {0};
+            char str[20] = {0};
             int s = 0;
             str[s++] = infix[i];
             printf("%c", infix[i]);
@@ -139,7 +140,9 @@ long long Eval(Token *tok){
             #endif
             numPush(&st, ret);
         }
-        tok = tok->next;
+        Token *nxt = tok->next;
+        free(tok);
+        tok = nxt;
     }
     return numPop(&st);
 }
@@ -147,7 +150,7 @@ int main(){
     char infix[MAX];
     for(int i = 0; i < 3; i++){
         scanf("%s", infix);
-        Token *tok = f1(infix);
+        Token *tok = inToPost(infix);
         #ifdef debug
         printTok(tok);
         #endif
