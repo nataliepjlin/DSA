@@ -130,7 +130,7 @@ long long Eval(Token *tok){
     numNode *st = NULL;
     while(tok){
         if(tok->type == num){
-            numPush(&st, (long long)(atoi(tok->data)));
+            numPush(&st, (long long)(atoll(tok->data)));
         }
         else{
             long long n2 = numPop(&st), n1 = numPop(&st);
