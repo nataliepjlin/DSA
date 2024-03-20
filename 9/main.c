@@ -34,8 +34,7 @@ char charPop(charNode **head){
     return c;
 }
 int priorty(char c){
-    if(c == '*' || c == '/') return 3;
-    else if(c == '%') return 2;
+    if(c == '*' || c == '/' || c == '%') return 2;
     else if(c == '+' || c == '-') return 1;
     return -1;
 }
@@ -130,7 +129,7 @@ long long Eval(Token *tok){
     numNode *st = NULL;
     while(tok){
         if(tok->type == num){
-            numPush(&st, (long long)(atoll(tok->data)));
+            numPush(&st, atoll(tok->data));
         }
         else{
             long long n2 = numPop(&st), n1 = numPop(&st);
