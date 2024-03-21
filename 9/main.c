@@ -1,21 +1,12 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #define MAX 4005
-enum Type{num, op};
-typedef struct Token{
-    int type;
-    char data[20];
-    struct Token *next;
-}Token;
-typedef struct numNode{
-    long long data;
-    struct numNode* next;
-}numNode;
 typedef struct charNode{
     char data;
-    struct charNode *next;
+    struct charNode* next;
 }charNode;
 charNode *genCNode(char c, charNode *next){
     charNode *node = (charNode*)malloc(sizeof(charNode));
@@ -38,77 +29,46 @@ int priorty(char c){
     else if(c == '+' || c == '-') return 1;
     return -1;
 }
-Token* genTok(char *str, int type){
-    Token *nt = (Token*)malloc(sizeof(Token));
-    memset(nt->data, 0, sizeof(nt->data));
-    strcpy(nt->data, str);
-    nt->type = type;
-    nt->next = NULL;
-    return nt;
-}
-Token* inToPost(char *infix){
+void infixToPostfix(char *infix, char postfix[]){
     charNode *st = NULL;
-    Token *post = genTok("", -1), *cur = post;
-    int len = strlen(infix), i = 0;
-    while(i < len){
+    int len = strlen(infix);
+    int idx = 0;
+    for(int i = 0; i < len; i++){
         if(isdigit(infix[i])){
-            char str[20] = {0};
-            int s = 0;
-            str[s++] = infix[i];
-            printf("%c", infix[i]);
-            i++;
-            while(i < len && isdigit(infix[i])){
-                str[s++] = infix[i];
-                printf("%c", infix[i]);
-                i++;
-            }
-            cur->next = genTok(str, num);
-            cur = cur->next;
+            postfix[idx++] = infix[i];
+            printf("%c", postfix[idx - 1]);
         }
-        else{
-            if(infix[i] == '(') charPush(&st, infix[i]);
-            else if(infix[i] == ')'){
-                while(st && st->data != '('){
-                    char opstr[2] = {0}; opstr[0] = charPop(&st);
-                    printf("%c", opstr[0]);
-                    cur->next = genTok(opstr, op);
-                    cur = cur->next;
-                }
-                charPop(&st);
-            }
-            else{
-                while(st && priorty(st->data) >= priorty(infix[i])){
-                    char opstr[2] = {0}; opstr[0] = charPop(&st);
-                    printf("%c", opstr[0]);
-                    cur->next = genTok(opstr, op);
-                    cur = cur->next;
-                }
-                charPush(&st, infix[i]);
-            }
-            i++;
+        else if(infix[i] == '('){
+            charPush(&st, infix[i]);
         }
-    }
+        else if(infix[i] == ')'){
+            while(st && st->data != '('){
+                postfix[idx++] = ' ';
+                postfix[idx++] = charPop(&st);
+                printf("%c", postfix[idx - 1]);
+            }
+            charPop(&st);//pop left bracket
+        }
+        else{//op
+            while(st && priorty(st->data) >= priorty(infix[i])){
+                postfix[idx++] = ' ';
+                postfix[idx++] = charPop(&st);
+                printf("%c", postfix[idx - 1]);
+            }
+            postfix[idx++] = ' ';
+            charPush(&st, infix[i]);
+        }
+    }//for loop
     while(st){
-        char opstr[2] = {0}; opstr[0] = charPop(&st);
-        printf("%c", opstr[0]);
-        cur->next = genTok(opstr, op);
-        cur = cur->next;
-    }
-    return post->next;
-}
-void printTok(Token *tok){
-    while(tok){
-        printf("type = %d, data = %s\n", tok->type, tok->data);
-        tok = tok->next;
+        postfix[idx++] = ' ';
+        postfix[idx++] = charPop(&st);
+        printf("%c", postfix[idx - 1]);
     }
 }
-long long Calc(long long n1, char tok, long long n2){
-    if(tok == '%' && n2 != 0) return n1 % n2;
-    else if (tok == '-') return n1 - n2;
-    else if (tok == '*') return n1 * n2;
-    else if(tok == '/' && n2 != 0) return n1 / n2;
-    else return n1 + n2;
-}
+typedef struct numNode{
+    long long data;
+    struct numNode *next;
+}numNode;
 numNode *genNNode(long long num, numNode *next){
     numNode *node = (numNode*)malloc(sizeof(numNode));
     node->data = num, node->next = next;
@@ -125,23 +85,36 @@ long long numPop(numNode **head){
     *head = nxt;
     return num;
 }
-long long Eval(Token *tok){
+long long Calc(long long n1, char tok, long long n2){
+    if(tok == '%' && n2 != 0) return n1 % n2;
+    else if (tok == '-') return n1 - n2;
+    else if (tok == '*') return n1 * n2;
+    else if(tok == '/' && n2 != 0) return n1 / n2;
+    else return n1 + n2;
+}
+long long Eval(char *postfix){
     numNode *st = NULL;
-    while(tok){
-        if(tok->type == num){
-            numPush(&st, atoll(tok->data));
+    int i = 0, len = strlen(postfix);
+    long long tmp = 0;
+    while(i < len){
+        if(isdigit(postfix[i])) tmp = tmp * 10 + (postfix[i] - '0');
+        else if(postfix[i] == ' '){
+            #ifdef debug
+            printf("tmp = %lld\n", tmp);
+            #endif
+            numPush(&st, tmp);
+            tmp = 0;
         }
         else{
             long long n2 = numPop(&st), n1 = numPop(&st);
-            long long ret = Calc(n1, tok->data[0], n2);
+            long long ret = Calc(n1, postfix[i], n2);
             #ifdef debug
             printf("ret = %lld\n", ret);
             #endif
             numPush(&st, ret);
+            i++;
         }
-        Token *nxt = tok->next;
-        free(tok);
-        tok = nxt;
+        i++;
     }
     return numPop(&st);
 }
@@ -149,10 +122,12 @@ int main(){
     char infix[MAX];
     for(int i = 0; i < 3; i++){
         scanf("%s", infix);
-        Token *tok = inToPost(infix);
+        char postfix[MAX * 2] = {0};
+        infixToPostfix(infix, postfix);
+        printf("=");
         #ifdef debug
-        printTok(tok);
+        printf("\npostfix = %s\n", postfix);
         #endif
-        printf("=%lld\n", Eval(tok));
+        printf("%lld\n", Eval(postfix));
     }
 }
