@@ -28,9 +28,10 @@ void charPush(charNode **head, char c){
 char charPop(charNode **head){
     // if(*head == NULL) return 0;
     char c = (*head)->data;
-    charNode *nxt = (*head)->next;
-    free(*head);
-    *head = nxt;
+    // charNode *nxt = (*head)->next;
+    // free(*head);
+    // *head = nxt;
+    *head = (*head)->next;
     return c;
 }
 int priorty(char c){
@@ -95,11 +96,11 @@ Token* inToPost(char *infix){
 }
 long long Calc(long long n1, long long lltok, long long n2){
     char tok = (char)lltok;
-    if(tok == '%' && n2 != 0) return n1 % n2;
+    if(tok == '+') return n1 + n2;
     else if (tok == '-') return n1 - n2;
     else if (tok == '*') return n1 * n2;
-    else if(tok == '/' && n2 != 0) return n1 / n2;
-    else return n1 + n2;
+    else if(tok == '/') return n1 / n2;
+    else return n1 % n2;
 }
 numNode *genNNode(long long num, numNode *next){
     numNode *node = (numNode*)malloc(sizeof(numNode));
@@ -112,9 +113,10 @@ void numPush(numNode **head, long long num){
 long long numPop(numNode **head){
     if(*head == NULL) return 0ll;
     long long num = (*head)->data;
-    numNode *nxt = (*head)->next;
-    free(*head);
-    *head = nxt;
+    // numNode *nxt = (*head)->next;
+    // free(*head);
+    // *head = nxt;
+    *head = (*head)->next;
     return num;
 }
 long long Eval(Token *tok){
@@ -131,9 +133,10 @@ long long Eval(Token *tok){
             #endif
             numPush(&st, ret);
         }
-        Token *nxt = tok->next;
-        free(tok);
-        tok = nxt;
+        // Token *nxt = tok->next;
+        // free(tok);
+        // tok = nxt;
+        tok = tok->next;
     }
     return numPop(&st);
 }
