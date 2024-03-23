@@ -28,10 +28,9 @@ void charPush(charNode **head, char c){
 char charPop(charNode **head){
     // if(*head == NULL) return 0;
     char c = (*head)->data;
-    // charNode *nxt = (*head)->next;
-    // free(*head);
-    // *head = nxt;
-    *head = (*head)->next;
+    charNode *nxt = (*head)->next;
+    free(*head);
+    *head = nxt;
     return c;
 }
 int priorty(char c){
@@ -113,10 +112,9 @@ void numPush(numNode **head, long long num){
 long long numPop(numNode **head){
     if(*head == NULL) return 0ll;
     long long num = (*head)->data;
-    // numNode *nxt = (*head)->next;
-    // free(*head);
-    // *head = nxt;
-    *head = (*head)->next;
+    numNode *nxt = (*head)->next;
+    free(*head);
+    *head = nxt;
     return num;
 }
 long long Eval(Token *tok){
@@ -133,10 +131,9 @@ long long Eval(Token *tok){
             #endif
             numPush(&st, ret);
         }
-        // Token *nxt = tok->next;
-        // free(tok);
-        // tok = nxt;
-        tok = tok->next;
+        Token *nxt = tok->next;
+        free(tok);
+        tok = nxt;
     }
     return numPop(&st);
 }
