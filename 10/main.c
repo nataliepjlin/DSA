@@ -27,7 +27,7 @@ node_t *heapMerge(heap_t *h1, heap_t *h2){
     if(h1->head == NULL) return h2->head;
     if(h2->head == NULL) return h1->head;
     node_t *head, *cur1 = h1->head, *cur2 = h2->head, *tail;
-    if(h1->head->deg >= h2->head->deg){
+    if(h1->head->deg > h2->head->deg){
         head = h1->head;
         cur1 = cur1->sib;
     }
@@ -37,7 +37,7 @@ node_t *heapMerge(heap_t *h1, heap_t *h2){
     }
     tail = head;
     while(cur1 && cur2){
-        if(cur1->deg >= cur2->deg){
+        if(cur1->deg > cur2->deg){
             tail->sib = cur1;
             cur1 = cur1->sib;
         }
@@ -51,6 +51,7 @@ node_t *heapMerge(heap_t *h1, heap_t *h2){
     return head;
 }
 node_t *heapUnion(heap_t *origin, heap_t *uni){
+    if(origin->head == NULL && uni->head == NULL) return NULL;
     node_t *head = heapMerge(origin, uni);
     origin->head = NULL, uni->head = NULL;
     if(head == NULL) return NULL;
@@ -61,7 +62,7 @@ node_t *heapUnion(heap_t *origin, heap_t *uni){
             cur = next;
         }
         else{
-            if(cur->priorty >= next->priorty){
+            if(cur->priorty > next->priorty){
                 cur->sib = next->sib;
                 next->parent = cur;
                 next->sib = cur->child;
@@ -90,10 +91,10 @@ void heapInsert(heap_t *h, int id, int priorty){
     h->numOfJob += 1;
     free(tmp);
 }
-void heapRemove(heap_t *h, node_t *node, node_t *prev){
-    if(node == h->head) h->head = node->sib;
-    else prev->sib = node->sib;
-    node_t *newHead = NULL, *child = node->child;
+void heapRemove(heap_t *h, node_t *mx, node_t *prev){
+    if(mx == h->head) h->head = mx->sib;
+    else prev->sib = mx->sib;
+    node_t *newHead = NULL, *child = mx->child;
     while(child){
         node_t *next = child->sib;
         child->sib = newHead;
@@ -108,7 +109,6 @@ void heapRemove(heap_t *h, node_t *node, node_t *prev){
     free(tmp);
 }
 node_t *heapMax(heap_t *h){
-    if(h->head == NULL) return NULL;
     node_t *max = h->head;
     node_t *max_prev = NULL, *next = max->sib, *next_prev = max;
     while(next){
@@ -140,10 +140,12 @@ int main(){
         else if(op == PRINT){
             scanf("%d", &pid1);
             pid1--;
-            node_t *mx = heapMax(heapArr[pid1]);
-            if(mx == NULL) printf("no documents in queue\n");
-            else printf("%d printed\n", mx->id);
-            free(mx);
+            if(heapArr[pid1]->head == NULL) printf("no documents in queue\n");
+            else{
+                node_t *mx = heapMax(heapArr[pid1]);
+                printf("%d printed\n", mx->id);
+                free(mx);
+            }
         }
         else{
             scanf("%d%d", &pid1, &pid2);
