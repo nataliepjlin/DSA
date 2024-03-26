@@ -107,7 +107,7 @@ void heapRemove(heap_t *h, node_t *node, node_t *prev){
     h->numOfJob -= 1;
     free(tmp);
 }
-node_t *heapMin(heap_t *h){
+node_t *heapMax(heap_t *h){
     if(h->head == NULL) return NULL;
     node_t *max = h->head;
     node_t *max_prev = NULL, *next = max->sib, *next_prev = max;
@@ -125,26 +125,22 @@ node_t *heapMin(heap_t *h){
 int main(){
     int n, m, op, id, priority, pid1, pid2;
     scanf("%d%d", &n, &m);
-    heap_t **heapArr = calloc(n, sizeof(heap_t*));
+    heap_t **heapArr = (heap_t**)malloc(n * sizeof(heap_t*));
+    for(int i = 0; i < n; i++){
+        heapArr[i] = genHeap();
+    }
     for(int i = 0; i < m; i++){
-        #ifdef debug
-        printf("\n");
-        #endif
         scanf("%d", &op);
         if(op == ADD){
             scanf("%d%d%d", &id, &priority, &pid1);
             pid1--;
-            #ifdef debug
-            printf("add (id, priorty) = (%d, %d) to %dth printer\n", id, priority, pid1);
-            #endif
-            if(heapArr[pid1] == NULL) heapArr[pid1] = genHeap();
             heapInsert(heapArr[pid1], id, priority);
             printf("%d jobs waiting on printer %d\n", heapArr[pid1]->numOfJob, pid1 + 1);
         }
         else if(op == PRINT){
             scanf("%d", &pid1);
             pid1--;
-            node_t *mx = heapMin(heapArr[pid1]);
+            node_t *mx = heapMax(heapArr[pid1]);
             if(mx == NULL) printf("no documents in queue\n");
             else printf("%d printed\n", mx->id);
             free(mx);
