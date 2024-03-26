@@ -1,58 +1,31 @@
-#include<stdio.h>
-int PARENT(int i){
-    return i / 2;
+#include <stdio.h>
+#include <limits.h>
+#define PARENT(i) i / 2
+void swap(int *a, int *b){
+    int t = *a;
+    *a = *b, *b = t;
 }
-int LEFT(int i){
-    return 2 * i;
-}
-int RIGHT(int i){
-    return 2 * i + 1;
-}
-int getLargest(int A[], int i, int heapSize){
-    int l = LEFT(i), r = RIGHT(i);
-    int largest;
-
-    if(l <= heapSize && A[l] > A[i])
-        largest = l;
-    else largest = i;
-
-    if(r <= heapSize && A[r] > A[largest])
-        largest = r;
-
-    return largest;
-}
-
-void maxHeapify(int A[], int i, int heapSize){
-    int largest = getLargest(A, i, heapSize);
-    while(largest != i){
-        int tmp = A[i];
-        A[i] = A[largest];
-        A[largest] = tmp;
-
-        i = largest;
-        largest = getLargest(A, i, heapSize);
+void heapIncreaseKey(int arr[], int i, int key){
+    arr[i] = key;
+    while(i > 1 && arr[PARENT(i)] < arr[i]){
+        swap(&arr[PARENT(i)], &arr[i]);
+        i = PARENT(i);
     }
 }
-
-void buildMaxHeap(int A[], int heapSize){
-    for(int i = heapSize / 2; i >= 1; i--){
-        maxHeapify(A, i, heapSize);
-    }
+void maxHeapInsert(int arr[], int *size, int key){
+    *size += 1;
+    arr[*size] = INT_MIN;
+    heapIncreaseKey(arr, *size, key);
 }
-
 int main(){
-    int n;
-    int arr[1000001];
+    int n, size = 0, key;
     scanf("%d", &n);
-
-    for(int i = 1; i <= n; i++){
-        scanf("%d", &arr[i]);
+    int arr[100005];
+    for(int i = 0; i < n; i++){
+        scanf("%d", &key);
+        maxHeapInsert(arr, &size, key);
     }
-
-    buildMaxHeap(arr, n);
-
-    for(int i = 1; i <= n; i++){
+    for(int i = 1; i <= n; i++)
         printf("%d%c", arr[i], " \n"[i == n]);
-    }
     return 0;
 }
