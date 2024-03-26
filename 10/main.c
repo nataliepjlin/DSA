@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#define N 1000001
 enum OP{ADD = 1, PRINT, MOVE};
 typedef struct node_t{
     int id, deg;
@@ -95,9 +96,9 @@ void heapRemove(heap_t *h, node_t *mx, node_t *prev){
     if(mx == h->head) h->head = mx->sib;
     else prev->sib = mx->sib;
     node_t *newHead = NULL, *child = mx->child;
-    while(child){
+    while(child){//reversing
         node_t *next = child->sib;
-        child->sib = newHead;
+        child->sib = newHead;//newHead stores previous sibling
         child->parent = NULL;
         newHead = child;
         child = next;
@@ -125,7 +126,7 @@ node_t *heapMax(heap_t *h){
 int main(){
     int n, m, op, id, priority, pid1, pid2;
     scanf("%d%d", &n, &m);
-    heap_t **heapArr = (heap_t**)malloc(n * sizeof(heap_t*));
+    heap_t *heapArr[N];
     for(int i = 0; i < n; i++){
         heapArr[i] = genHeap();
     }
@@ -156,5 +157,4 @@ int main(){
             printf("%d jobs waiting on printer %d after moving\n", heapArr[pid2]->numOfJob, pid2 + 1);
         }
     }
-    free(heapArr);
 }
