@@ -28,7 +28,7 @@ node_t *heapMerge(heap_t *h1, heap_t *h2){
     if(h1->head == NULL) return h2->head;
     if(h2->head == NULL) return h1->head;
     node_t *head, *cur1 = h1->head, *cur2 = h2->head, *tail;
-    if(h1->head->deg > h2->head->deg){
+    if(h1->head->deg >= h2->head->deg){
         head = h1->head;
         cur1 = cur1->sib;
     }
@@ -38,7 +38,7 @@ node_t *heapMerge(heap_t *h1, heap_t *h2){
     }
     tail = head;
     while(cur1 && cur2){
-        if(cur1->deg > cur2->deg){
+        if(cur1->deg >= cur2->deg){
             tail->sib = cur1;
             cur1 = cur1->sib;
         }
@@ -48,16 +48,15 @@ node_t *heapMerge(heap_t *h1, heap_t *h2){
         }
         tail = tail->sib;
     }
-    tail->sib = (cur1) ? cur1 : cur2;
+    tail->sib = (cur1 != NULL) ? cur1 : cur2;
     return head;
 }
 node_t *heapUnion(heap_t *origin, heap_t *uni){
-    if(origin->head == NULL && uni->head == NULL) return NULL;
-    node_t *head = heapMerge(origin, uni);
+    node_t *new_head = heapMerge(origin, uni);
     origin->head = NULL, uni->head = NULL;
-    if(head == NULL) return NULL;
-    node_t *prev = NULL, *cur = head, *next = head->sib;
-    while(next){
+    if(new_head == NULL) return NULL;
+    node_t *prev = NULL, *cur = new_head, *next = new_head->sib;
+    while(next != NULL){
         if(cur->deg != next->deg || (next->sib && next->sib->deg == cur->deg)){
             prev = cur;
             cur = next;
@@ -71,7 +70,7 @@ node_t *heapUnion(heap_t *origin, heap_t *uni){
                 cur->deg += 1;
             }
             else{
-                if(prev == NULL) head = next;
+                if(prev == NULL) new_head = next;
                 else prev->sib = next;
                 cur->parent = next;
                 cur->sib = next->child;
@@ -80,9 +79,9 @@ node_t *heapUnion(heap_t *origin, heap_t *uni){
                 cur = next;
             }
         }
-        next = next->sib;
+        next = cur->sib;
     }
-    return head;
+    return new_head;
 }
 void heapInsert(heap_t *h, int id, int priorty){
     node_t *node = genNode(id, priorty);
@@ -145,7 +144,7 @@ int main(){
             else{
                 node_t *mx = heapMax(heapArr[pid1]);
                 printf("%d printed\n", mx->id);
-                free(mx);
+                // free(mx);
             }
         }
         else{
