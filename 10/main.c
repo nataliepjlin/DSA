@@ -3,42 +3,37 @@
 #define N 1000001
 typedef struct node_t {
 	int priority, id;
-	int degree;
+	int deg;
 	struct node_t *child;
 	struct node_t *parent;
 	struct node_t *sib;
 } node_t;
-
 typedef struct heap_t {
 	node_t *head;
 	int job;
 } heap_t;
-
 node_t *node_init(int priority, int id){
 	node_t *node = (node_t*)malloc(sizeof (node_t));
 	node->priority = priority;
 	node->id = id;
-	node->degree = 0;
+	node->deg = 0;
 	node->sib = node->child = node->parent = NULL;
 	return node;
 }
-
 heap_t *heap_init(){
-	heap_t *heap = malloc(sizeof (heap_t));
+	heap_t *heap = (heap_t*)malloc(sizeof (heap_t));
 	heap->head = NULL;
+	heap->job = 0;
 	return heap;
 }
-
 node_t *heap_merge(heap_t *heap1, heap_t *heap2){
 	if(heap1->head == NULL) return heap2->head;
 	if(heap2->head == NULL) return heap1->head;
-
 	node_t *head;
 	node_t *cur1 = heap1->head;
 	node_t *cur2 = heap2->head;
 	node_t *tail;
-
-	if(heap1->head->degree >= heap2->head->degree){
+	if(heap1->head->deg <= heap2->head->deg){
 		head = heap1->head;
 		cur1 = cur1->sib;
 	}
@@ -48,7 +43,7 @@ node_t *heap_merge(heap_t *heap1, heap_t *heap2){
 	}
 	tail = head;
 	while(cur1 != NULL && cur2 != NULL){
-		if(cur1->degree >= cur2->degree){
+		if(cur1->deg <= cur2->deg){
 			tail->sib = cur1;
 			cur1 = cur1->sib;
 		}
@@ -56,75 +51,58 @@ node_t *heap_merge(heap_t *heap1, heap_t *heap2){
 			tail->sib = cur2;
 			cur2 = cur2->sib;
 		}
-
 		tail = tail->sib;
 	}
-
 	tail->sib = (cur1 != NULL) ? cur1 : cur2;
-
 	return head;
 }
-
 node_t *heap_union(heap_t *original, heap_t *uni){
 	node_t *new_head = heap_merge(original, uni);
-
 	original->head = NULL;
 	uni->head = NULL;
-
 	if(new_head == NULL)
 		return NULL;
-
 	node_t *prev = NULL;
-	node_t *aux = new_head;
+	node_t *cur = new_head;
 	node_t *next = new_head->sib;
-
 	while(next != NULL){
-		if(aux->degree != next->degree 
-		|| (next->sib != NULL && next->sib->degree == aux->degree)){
-			prev = aux;
-			aux = next;
+		if(cur->deg != next->deg 
+		|| (next->sib != NULL && next->sib->deg == cur->deg)){
+			prev = cur;
+			cur = next;
 		}
 		else{
-			if(aux->priority > next->priority){
-				aux->sib = next->sib;
-				next->parent = aux;
-				next->sib = aux->child;
-				aux->child = next;
-				aux->degree += 1;
+			if(cur->priority > next->priority){
+				cur->sib = next->sib;
+				next->parent = cur;
+				next->sib = cur->child;
+				cur->child = next;
+				cur->deg += 1;
 			}
 			else{
-				if(prev == NULL)
-					new_head = next;
-				else
-					prev->sib = next;
-
-				aux->parent = next;
-				aux->sib = next->child;
-				next->child = aux;
-				next->degree += 1;
-
-				aux = next;
+				if(prev == NULL) new_head = next;
+				else prev->sib = next;
+				cur->parent = next;
+				cur->sib = next->child;
+				next->child = cur;
+				next->deg += 1;
+				cur = next;
 			}
 		}
-		next = aux->sib;
+		next = cur->sib;
 	}
 	return new_head;
 }
-
 void heap_insert(heap_t *heap, int priority, int id){
 	node_t *node = node_init(priority, id);
-	heap_t *temp = heap_init();
-	temp->head = node;
-	heap->head = heap_union(heap, temp);
-	free(temp);
+	heap_t *tmp = heap_init();
+	tmp->head = node;
+	heap->head = heap_union(heap, tmp);
+	free(tmp);
 }
-
-
-void heap_remove(heap_t *heap, node_t *head, node_t *bef){
-	if(head == heap->head)
-		heap->head = head->sib;
-	else
-		bef->sib = head->sib;
+void heap_remove(heap_t *heap, node_t *head, node_t *prev){
+	if(head == heap->head) heap->head = head->sib;
+	else prev->sib = head->sib;
 
 	node_t *new_head = NULL;
 	node_t *child = head->child;
@@ -137,10 +115,10 @@ void heap_remove(heap_t *heap, node_t *head, node_t *bef){
 		child = next;
 	}
 
-	heap_t *temp = heap_init();
-	temp->head = new_head;
-	heap->head = heap_union(heap, temp);
-	free(temp);
+	heap_t *tmp = heap_init();
+	tmp->head = new_head;
+	heap->head = heap_union(heap, tmp);
+	free(tmp);
 }
 
 
@@ -157,11 +135,9 @@ node_t *heap_min(heap_t *heap){
 			min = next;
 			min_prev = next_prev;
 		}
-
 		next_prev = next;
 		next = next->sib;
 	}
-
 	heap_remove(heap, min, min_prev);
 	return min;
 }
@@ -169,10 +145,10 @@ int main(){
     int n, m, op, id, priority, pid1, pid2;
     scanf("%d%d", &n, &m);
     heap_t *heapArr[N];
-    for(int i = 0; i < n; i += 1){
+    for(int i = 0; i < n; i ++){
         heapArr[i] = heap_init();
     }
-    for(int i = 0; i < m; i += 1){
+    for(int i = 0; i < m; i ++){
         scanf("%d", &op);
         if(op == 1){
             scanf("%d%d%d", &id, &priority, &pid1);
