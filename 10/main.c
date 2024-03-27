@@ -80,7 +80,7 @@ node_t *heapUnion(heap_t *origin, heap_t *uni){
                 cur = next;
             }
         }
-        next = next->sib;
+        next = cur->sib;
     }
     return head;
 }
