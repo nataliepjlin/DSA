@@ -107,7 +107,7 @@ int main(){
             int tmp_cur = cur;
             long long newti;
             while(tmp_cur 
-            && (newti = ti - dunArr[tmp_cur]->up->len) > 0){
+            && (newti = ti - dunArr[tmp_cur]->up->len) >= 0){
                 tmp_cur = dunArr[tmp_cur]->up->u;
                 ti = newti;
             }//change to binary search+prefix sum????
