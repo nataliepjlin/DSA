@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <stdbool.h>
 #define N 1000001
 typedef struct down_t{
     int v;
@@ -8,8 +8,8 @@ typedef struct down_t{
 }down_t;
 typedef struct info_t{
     down_t *down_h, *down_cur;
-    int pid;//path id
-    long long presum;
+    bool has;
+    long long treasure;
 }info_t;
 typedef struct up_t{
     int u;
@@ -20,71 +20,63 @@ down_t *gen_down(int v){
     d->v = v, d->next = NULL;
     return d;
 }
-void extend_down(info_t *d, int u, int v, long long *pmax, int *pid, long long len){
+void extend_down(info_t *d, int v){
     down_t *dwn = gen_down(v);
-    int cur_pid = d[u].pid;
-    if(d[u].down_h == NULL){
-        d[u].down_h = dwn;
-    }
-    else{
-        d[u].down_cur->next = dwn;
-        *pid += 1;
-        pmax[*pid] = d[u].presum;
-        cur_pid = *pid;
-    }
-    pmax[cur_pid] += len;
-    #ifdef debug
-    printf("len = %lld, pmax[%d] = %lld\n", len, cur_pid, pmax[cur_pid]);
-    #endif
-    d[v].presum = pmax[cur_pid];
-    d[v].pid = cur_pid;
+    if(d->down_h == NULL) d->down_h = dwn;
+    else d->down_cur->next = dwn;
     d->down_cur = dwn;
 }
-void pop_down(info_t *d, int u, int pid, long long *pmax){
-    pmax[pid] = d[u].presum;
-    down_t *next = d[u].down_h->next;
-    free(d[u].down_h);
-    d[u].down_h = next;
-    if(d[u].down_h == NULL) d[u].down_cur = NULL;
+void pop_down(info_t *d){
+    down_t *next = d->down_h->next;
+    free(d->down_h);
+    d->down_h = next;
+    if(d->down_h == NULL) d->down_cur = NULL;
 }
-void print_downs(int u, info_t *info){
-    down_t *cur = info[u].down_h;
+void print_downs(int u, info_t *bd){
+    down_t *cur = bd->down_h;
     while(cur){
-        printf("(%d[pid = %d], %d[pid = %d])->", u, info[u].pid, cur->v, info[cur->v].pid);
+        printf("(%d, %d)->", u, cur->v);
         cur = cur->next;
     }
     printf("X\n");
 }
 int main(){
-    int n, m, q, u, v, LOG = 0, op, pid = 0;
+    int n, m, q, u, v, LOG = 0, op;
     long long len;
     scanf("%d%d%d", &n, &m, &q);
-    up_t **vec = malloc(sizeof(up_t*) * n);
-    info_t *info = malloc(sizeof(info_t) * n);
-    long long *pmax = malloc(sizeof(long long) * m);//paths' max
+    up_t **up = malloc(sizeof(up_t*) * n);
+    info_t info[n];
     while((1 << LOG) <= n) LOG++;
     LOG++;
     for(int i = 0; i < n; i++){
-        vec[i] = malloc(LOG * sizeof(up_t));
+        up[i] = malloc(LOG * sizeof(up_t));
         info[i].down_h = info[i].down_cur = NULL;
+        info[i].has = false;
     }
-    info[0].pid = 0, info[0].presum = 0;
-    pmax[0] = 0;
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
-        vec[v][0].u = u;
-        vec[v][0].len = len;
-        extend_down(info, u, v, pmax, &pid, len);
+        up[v][0].u = u;
+        up[v][0].len = len;
+        extend_down(&info[u], v);
         #ifdef debug
-        print_downs(u, info);
+        print_downs(u, &info[u]);
         #endif
     }//set direct ancestor and descendants
-    vec[0][0].u = 0, vec[0][0].len = 0;
+    up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
+        #ifdef debug
+        printf("%dth dun 0th ancestor = %d, len = %lld\n", i, up[i][0].u, up[i][0].len);
+        #endif
         for(int j = 1; j < LOG; j++){
-            vec[i][j].u = vec[ vec[i][j - 1].u ][j - 1].u;
-            vec[i][j].len = vec[ vec[i][j - 1].u ][j - 1].len + vec[i][j - 1].len;
+            up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
+            up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
+            #ifdef debug
+            printf("%dth dun 2^%dth ancestor = %d, len = %lld\n", i, j, up[i][j].u, up[i][j].len);
+            #endif
         }
+        #ifdef debug
+        printf("\n");
+        #endif
     }//binary lifting
 
     int cur = 0;
@@ -104,16 +96,15 @@ int main(){
         else if(op == 2){
             if(cur == 0) printf("-1\n");
             else{
-                int prev = cur;
-                cur = vec[cur][0].u;
-                pop_down(info, cur, info[prev].pid, pmax);
+                cur = up[cur][0].u;
+                pop_down(&info[cur]);
                 printf("%d\n", cur);
             }
         }
         else if(op == 3){
             scanf("%lld", &ti);
             int ans = cur;
-            while(ans != 0 && ti >= vec[ans][0].len){
+            while(ans != 0 && ti >= up[ans][0].len){
                 int low = 0, high = LOG - 1, tmpcur = ans;
                 #ifdef debug
                 printf("tmpcur = %d\n", tmpcur);
@@ -121,9 +112,9 @@ int main(){
                 long long len = 0; 
                 while(low <= high){
                     int mid = (low + high) >> 1;
-                    if(vec[tmpcur][mid].len <= ti){
-                        ans = vec[tmpcur][mid].u;
-                        len = vec[tmpcur][mid].len;
+                    if(up[tmpcur][mid].len <= ti){
+                        ans = up[tmpcur][mid].u;
+                        len = up[tmpcur][mid].len;
                         low = mid + 1;
                     }
                     else high = mid - 1;
@@ -135,17 +126,25 @@ int main(){
             }
             printf("%d\n", ans);
         }
-        else if(op == 4){
-            ti = 0;
-            down_t *d = info[cur].down_h;
-            while(d != NULL){
-                #ifdef debug
-                printf("info[%d].pid = %d\n", d->v, info[d->v].pid);
-                #endif
-                if(pmax[ info[d->v].pid ] > ti) ti = pmax[ info[d->v].pid ];
-                d = d->next;
+        else if(op == 5){
+            scanf("%lld", &ti);
+            int tmpcur = cur, neg = -1;
+            while(tmpcur != 0){
+                if(info[tmpcur].has == false){
+                    info[tmpcur].treasure = ti;
+                    info[tmpcur].has = true;
+                    break;
+                }
+                long long old = info[tmpcur].treasure;
+                info[tmpcur].treasure = ti;
+                ti = old - up[tmpcur][0].len;
+                tmpcur = up[tmpcur][0].u;
+                if(ti < 0 && neg == -1) neg = tmpcur;
             }
-            printf("%lld\n", ti);
+            if(tmpcur == 0){
+                if(ti >= 0) printf("value remaining is %lld\n", ti);
+                else printf("value lost at %d\n", neg);
+            }
         }
         else break;
     }
