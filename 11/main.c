@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #define N 1000001
 typedef struct down_t{
     int v;
@@ -24,7 +25,9 @@ void extend_down(big_down *d, int v){
     d->down_cur = dwn;
 }
 void pop_down(big_down *d){
-    d->down_h = d->down_h->next;
+    down_t *next = d->down_h->next;
+    free(d->down_h);
+    d->down_h = next;
     if(d->down_h == NULL) d->down_cur = NULL;
 }
 void print_downs(int u, big_down *bd){
@@ -49,7 +52,7 @@ int main(){
     }
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
-        vec[v][0].u = u;//vth dun's 0th(direct) ancestor
+        vec[v][0].u = u;
         vec[v][0].len = len;
         extend_down(&downs[u], v);
         #ifdef debug
@@ -59,7 +62,7 @@ int main(){
     vec[0][0].u = 0, vec[0][0].len = 0;
     for(int i = 0; i < n; i++){
         #ifdef debug
-        printf("%dth dun 1st ancestor = %d, len = %lld\n", i, vec[i][0].u, vec[i][0].len);
+        printf("%dth dun 0th ancestor = %d, len = %lld\n", i, vec[i][0].u, vec[i][0].len);
         #endif
         for(int j = 1; j < LOG; j++){
             vec[i][j].u = vec[ vec[i][j - 1].u ][j - 1].u;
@@ -76,6 +79,9 @@ int main(){
     int cur = 0;
     long long ti;
     for(int i = 0; i < q; i++){
+        #ifdef debug
+        printf("\ncur = %d\n", cur);
+        #endif
         scanf("%d", &op);
         if(op == 1){
             if(downs[cur].down_h == NULL) printf("-1\n");
@@ -94,14 +100,26 @@ int main(){
         }
         else if(op == 3){
             scanf("%lld", &ti);
-            int low = 0, high = LOG - 1, ans = cur;
-            while(low <= high){
-                int mid = (low + high) >> 1;
-                if(vec[cur][mid].len <= ti){
-                    ans = vec[cur][mid].u;
-                    low = mid + 1;
+            int ans = cur;
+            while(ans != 0 && ti >= vec[ans][0].len){
+                int low = 0, high = LOG - 1, tmpcur = ans;
+                #ifdef debug
+                printf("tmpcur = %d\n", tmpcur);
+                #endif
+                long long len = 0; 
+                while(low <= high){
+                    int mid = (low + high) >> 1;
+                    if(vec[tmpcur][mid].len <= ti){
+                        ans = vec[tmpcur][mid].u;
+                        len = vec[tmpcur][mid].len;
+                        low = mid + 1;
+                    }
+                    else high = mid - 1;
                 }
-                else high = mid - 1;
+                #ifdef debug
+                printf("len = %lld, ans = %d\n", len, ans);
+                #endif
+                ti -= len;
             }
             printf("%d\n", ans);
         }
