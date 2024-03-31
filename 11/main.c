@@ -53,7 +53,6 @@ int main(){
         up[i] = malloc(LOG * sizeof(up_t));
         info[i].down_h = info[i].down_cur = NULL;
         info[i].has = false;
-        info[i].deg = -1;
     }
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
@@ -108,9 +107,9 @@ int main(){
             scanf("%lld", &ti);
             int ans = cur;
             while(ans != 0 && ti >= up[ans][0].len){
-                int low = 0, high = info[ans].deg, tmpcur = ans;
+                int low = 0, high = info[ans].deg - 1, tmpcur = ans;
                 #ifdef debug
-                printf("tmpcur = %d\n", tmpcur);
+                printf("tmpcur = %d, low = %d, high = %d\n", tmpcur, low, high);
                 #endif
                 long long len = 0; 
                 while(low <= high){
