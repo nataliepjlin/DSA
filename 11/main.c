@@ -80,7 +80,7 @@ int main(){
     }//binary lifting
 
     int cur = 0;
-    long long ti;
+    long long ti, pi;
     for(int i = 0; i < q; i++){
         #ifdef debug
         printf("\ncur = %d\n", cur);
@@ -127,22 +127,26 @@ int main(){
             printf("%d\n", ans);
         }
         else if(op == 5){
-            scanf("%lld", &ti);
-            int tmpcur = cur, neg = -1;
+            scanf("%lld", &pi);
+            int tmpcur = cur, neg = 0;
             while(tmpcur != 0){
+                if(pi < 0 && !neg) neg = tmpcur;
                 if(info[tmpcur].has == false){
-                    info[tmpcur].treasure = ti;
+                    info[tmpcur].treasure = pi;
                     info[tmpcur].has = true;
                     break;
                 }
                 long long old = info[tmpcur].treasure;
-                info[tmpcur].treasure = ti;
-                ti = old - up[tmpcur][0].len;
+                info[tmpcur].treasure = pi;
+                if(old < 0){
+                    if(!neg) neg = tmpcur;
+                    pi = -1;
+                }
+                else pi = old - up[tmpcur][0].len;
                 tmpcur = up[tmpcur][0].u;
-                if(ti < 0 && neg == -1) neg = tmpcur;
             }
             if(tmpcur == 0){
-                if(ti >= 0) printf("value remaining is %lld\n", ti);
+                if(pi >= 0) printf("value remaining is %lld\n", pi);
                 else printf("value lost at %d\n", neg);
             }
         }
