@@ -10,6 +10,7 @@ typedef struct info_t{
     down_t *down_h, *down_cur;
     bool has;
     long long treasure;
+    int deg;
 }info_t;
 typedef struct up_t{
     int u;
@@ -52,6 +53,7 @@ int main(){
         up[i] = malloc(LOG * sizeof(up_t));
         info[i].down_h = info[i].down_cur = NULL;
         info[i].has = false;
+        info[i].deg = -1;
     }
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
@@ -62,11 +64,12 @@ int main(){
         print_downs(u, &info[u]);
         #endif
     }//set direct ancestor and descendants
-    up[0][0].u = 0, up[0][0].len = 0;
+    up[0][0].u = 0, up[0][0].len = 0, info[0].deg = 0;
     for(int i = 0; i < n; i++){
         #ifdef debug
         printf("%dth dun 0th ancestor = %d, len = %lld\n", i, up[i][0].u, up[i][0].len);
         #endif
+        if(i > 0) info[i].deg = info[ up[i][0].u ].deg + 1;
         for(int j = 1; j < LOG; j++){
             up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
             up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
@@ -105,7 +108,7 @@ int main(){
             scanf("%lld", &ti);
             int ans = cur;
             while(ans != 0 && ti >= up[ans][0].len){
-                int low = 0, high = LOG - 1, tmpcur = ans;
+                int low = 0, high = info[ans].deg, tmpcur = ans;
                 #ifdef debug
                 printf("tmpcur = %d\n", tmpcur);
                 #endif
@@ -128,7 +131,7 @@ int main(){
         }
         else if(op == 5){
             scanf("%lld", &pi);
-            int tmpcur = cur, neg = 0;
+            int tmpcur = cur, neg = -1;
             while(tmpcur != 0){
                 if(info[tmpcur].has == false){
                     info[tmpcur].treasure = pi;
@@ -137,8 +140,11 @@ int main(){
                 }
                 long long old = info[tmpcur].treasure;
                 info[tmpcur].treasure = pi;
+                #ifdef debug
+                printf("at %d, pi = %lld, old = %lld\n", tmpcur, pi, old);
+                #endif
                 if(old < up[tmpcur][0].len){
-                    if(!neg) neg = (old < 0) ? tmpcur : up[tmpcur][0].u;
+                    if(neg == -1) neg = (old < 0) ? tmpcur : up[tmpcur][0].u;
                     pi = -1;
                 }
                 else pi = old - up[tmpcur][0].len;
