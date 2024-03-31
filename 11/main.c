@@ -130,7 +130,6 @@ int main(){
             scanf("%lld", &pi);
             int tmpcur = cur, neg = 0;
             while(tmpcur != 0){
-                if(pi < 0 && !neg) neg = tmpcur;
                 if(info[tmpcur].has == false){
                     info[tmpcur].treasure = pi;
                     info[tmpcur].has = true;
@@ -138,8 +137,8 @@ int main(){
                 }
                 long long old = info[tmpcur].treasure;
                 info[tmpcur].treasure = pi;
-                if(old < 0){
-                    if(!neg) neg = tmpcur;
+                if(old < up[tmpcur][0].len){
+                    if(!neg) neg = (old < 0) ? tmpcur : up[tmpcur][0].u;
                     pi = -1;
                 }
                 else pi = old - up[tmpcur][0].len;
