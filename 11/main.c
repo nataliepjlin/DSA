@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#define N 1000001
+#include <string.h>
 typedef struct down_t{
     int v;
     struct down_t *next;
@@ -11,7 +11,6 @@ typedef struct info_t{
     bool has;
     long long treasure;
 }info_t;
-info_t info[N];
 typedef struct up_t{
     int u;
     long long len;//len with u
@@ -48,11 +47,8 @@ int main(){
     while((1 << LOG) <= n) LOG++;
     LOG++;
     up_t up[n][LOG];
-    for(int i = 0; i < n; i++){
-        // up[i] = malloc(LOG * sizeof(up_t));
-        info[i].down_h = info[i].down_cur = NULL;
-        info[i].has = false;
-    }
+    info_t info[n];
+    memset(info, 0, sizeof(info));
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
         up[v][0].u = u;
