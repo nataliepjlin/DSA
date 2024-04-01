@@ -57,19 +57,10 @@ int main(){
     }//set direct ancestor and descendants
     up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
-        #ifdef debug
-        printf("%dth dun 0th ancestor = %d, len = %lld\n", i, up[i][0].u, up[i][0].len);
-        #endif
         for(int j = 1; j < LOG; j++){
             up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
             up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
-            #ifdef debug
-            printf("%dth dun 2^%dth ancestor = %d, len = %lld\n", i, j, up[i][j].u, up[i][j].len);
-            #endif
         }
-        #ifdef debug
-        printf("\n");
-        #endif
     }//binary lifting
 
     int cur = 0;
@@ -121,23 +112,23 @@ int main(){
         }
         else if(op == 5){
             scanf("%lld", &pi);
-            int tmpcur = cur, neg = 0;
-            while(tmpcur != 0){
-                if(info[tmpcur].has == false){
-                    info[tmpcur].treasure = pi;
-                    info[tmpcur].has = true;
+            int idx = cur, neg = 0;
+            while(idx != 0){
+                if(info[idx].has == false){
+                    info[idx].treasure = pi;
+                    info[idx].has = true;
                     break;
                 }
-                long long old = info[tmpcur].treasure;
-                info[tmpcur].treasure = pi;
-                if(old < up[tmpcur][0].len){
-                    if(!neg) neg = (old < 0) ? tmpcur : up[tmpcur][0].u;
+                long long old = info[idx].treasure;
+                info[idx].treasure = pi;
+                if(old < up[idx][0].len){
+                    if(!neg) neg = up[idx][0].u;
                     pi = -1;
                 }
-                else pi = old - up[tmpcur][0].len;
-                tmpcur = up[tmpcur][0].u;
+                else pi = old - up[idx][0].len;
+                idx = up[idx][0].u;
             }
-            if(tmpcur == 0){
+            if(idx == 0){
                 if(pi >= 0) printf("value remaining is %lld\n", pi);
                 else printf("value lost at %d\n", neg);
             }
