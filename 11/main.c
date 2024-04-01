@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 typedef struct down_t{
     int v;
     struct down_t *next;
@@ -10,6 +11,7 @@ typedef struct info_t{
     down_t *down_h, *down_cur;
     bool has;
     long long treasure;
+    int cnt;
 }info_t;
 typedef struct up_t{
     int u;
@@ -20,25 +22,17 @@ down_t *gen_down(int v){
     d->v = v, d->next = NULL;
     return d;
 }
-void extend_down(info_t *d, int v){
+void extend_down(info_t *info, int v){
     down_t *dwn = gen_down(v);
-    if(d->down_h == NULL) d->down_h = dwn;
-    else d->down_cur->next = dwn;
-    d->down_cur = dwn;
+    if(info->down_h == NULL) info->down_h = dwn;
+    else info->down_cur->next = dwn;
+    info->cnt += 1;
+    info->down_cur = dwn;
 }
-void pop_down(info_t *d){
-    down_t *next = d->down_h->next;
-    free(d->down_h);
-    d->down_h = next;
-    if(d->down_h == NULL) d->down_cur = NULL;
-}
-void print_downs(int u, info_t *bd){
-    down_t *cur = bd->down_h;
-    while(cur){
-        printf("(%d, %d)->", u, cur->v);
-        cur = cur->next;
-    }
-    printf("X\n");
+void pop_down(info_t *info){
+    down_t *next = info->down_h->next;
+    free(info->down_h);
+    info->down_h = next;
 }
 int main(){
     int n, m, q, u, v, LOG = 0, op;
@@ -47,8 +41,8 @@ int main(){
     while((1 << LOG) <= n) LOG++;
     LOG++;
     up_t up[n][LOG];
-    info_t info[n];
-    memset(info, 0, sizeof(info));
+    info_t *info = malloc(n * sizeof(info_t));
+    memset(info, 0, n * sizeof(info_t));
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
         up[v][0].u = u;
@@ -89,16 +83,16 @@ int main(){
             scanf("%lld", &ti);
             int ans = cur;
             while(ans != 0 && ti >= up[ans][0].len){
-                int low = 0, high = LOG - 1, tmpcur = ans;
+                int low = 0, high = LOG - 1, idx = ans;
                 #ifdef debug
-                printf("tmpcur = %d\n", tmpcur);
+                printf("idx = %d\n", idx);
                 #endif
                 long long len = 0; 
                 while(low <= high){
                     int mid = (low + high) >> 1;
-                    if(up[tmpcur][mid].len <= ti){
-                        ans = up[tmpcur][mid].u;
-                        len = up[tmpcur][mid].len;
+                    if(up[idx][mid].len <= ti){
+                        ans = up[idx][mid].u;
+                        len = up[idx][mid].len;
                         low = mid + 1;
                     }
                     else high = mid - 1;
@@ -112,7 +106,7 @@ int main(){
         }
         else if(op == 5){
             scanf("%lld", &pi);
-            int idx = cur, neg = 0;
+            int idx = cur, neg = -1;
             while(idx != 0){
                 if(info[idx].has == false){
                     info[idx].treasure = pi;
@@ -122,7 +116,7 @@ int main(){
                 long long old = info[idx].treasure;
                 info[idx].treasure = pi;
                 if(old < up[idx][0].len){
-                    if(!neg) neg = up[idx][0].u;
+                    if(neg == -1) neg = (old < 0) ? idx : up[idx][0].u;
                     pi = -1;
                 }
                 else pi = old - up[idx][0].len;
@@ -135,4 +129,5 @@ int main(){
         }
         else break;
     }
+    free(info);
 }
