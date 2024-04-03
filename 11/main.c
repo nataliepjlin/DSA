@@ -8,7 +8,7 @@ typedef struct down_t{
 typedef struct info_t{
     down_t *down_h, *down_cur;
     int i;//ith v of its direct up
-    int cnt;//cnt of its direct downs
+    int cnt, collected;//cnt of its direct downs
     int max_idx, cur_idx;
     long long *presums;
 }info_t;
@@ -36,8 +36,8 @@ void pop_down(info_t *info){
     free(info->down_h);
     info->down_h = next;
 }
-void pcalloc(info_t *inf){
-    inf->presums = calloc(inf->cnt, sizeof(long long));
+void pmalloc(info_t *inf){
+    inf->presums = malloc(inf->cnt * sizeof(long long));
 }
 int main(){
     int n, m, q, u, v, LOG = 0, op;
@@ -57,28 +57,20 @@ int main(){
     for(int i = 0; i < n; i++){
         if(!info[i].cnt){
             info[i].max_idx = -1;
-            long long nowsum = 0; int idx = i;
-            while(idx != (u = up[idx][0].u)){
-                #ifdef debug
-                printf("idx = %d, ", idx);
-                #endif
+            long long nowsum = 0; int idx = i; bool allset = true;//all children's info are set
+            while(allset){
+                allset = false;
                 nowsum += up[idx][0].len;
-                if(info[u].presums == NULL){
-                    #ifdef debug
-                    printf("mallocing %d's presum\n", u);
-                    #endif
-                    pcalloc(&info[u]);
-                    info[u].max_idx = -1;
-                }
-                if(nowsum > info[u].presums[ info[idx].i ])
-                    info[u].presums[ info[idx].i ] = nowsum;
-                if(info[u].max_idx == -1
+                u = up[idx][0].u;
+                if(info[u].presums == NULL) pmalloc(&info[u]);
+                info[u].presums[ info[idx].i ] = nowsum;
+                if(!info[u].collected
                 || info[u].presums[ info[u].max_idx ] < nowsum
                 || (info[u].presums[ info[u].max_idx ] == nowsum && info[u].max_idx < info[idx].i))
                     info[u].max_idx = info[idx].i;
-                #ifdef debug
-                printf("%d's %dth presum = %lld, max_idx = %d\n", u, info[idx].i, info[u].presums[ info[idx].i ], info[u].max_idx);
-                #endif
+                info[u].collected += 1;
+                allset = (info[u].collected == info[u].cnt);
+                nowsum = info[u].presums[ info[u].max_idx ];
                 idx = up[idx][0].u;
             }
         }
