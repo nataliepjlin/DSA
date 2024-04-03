@@ -7,9 +7,10 @@ typedef struct down_t{
 }down_t;
 typedef struct info_t{
     down_t *down_h, *down_cur;
-    bool has;
-    long long treasure;
-    int cnt;
+    int i;//ith v of its direct up
+    int cnt;//cnt of its direct downs
+    int max_idx, cur_idx;
+    long long *presums;
 }info_t;
 typedef struct up_t{
     int u;
@@ -20,17 +21,23 @@ down_t *gen_down(int v){
     d->v = v, d->next = NULL;
     return d;
 }
-void extend_down(info_t *info, int v){
+void extend_down(info_t info[], int u, int v){
     down_t *dwn = gen_down(v);
-    if(info->down_h == NULL) info->down_h = dwn;
-    else info->down_cur->next = dwn;
-    info->cnt += 1;
-    info->down_cur = dwn;
+    if(info[u].down_h == NULL) info[u].down_h = dwn;
+    else info[u].down_cur->next = dwn;
+    info[v].i = info[u].cnt;
+    info[u].cnt += 1;
+    info[u].down_cur = dwn;
 }
 void pop_down(info_t *info){
     down_t *next = info->down_h->next;
+    if(info->cur_idx == info->max_idx) info->max_idx = -1;
+    info->cur_idx += 1;
     free(info->down_h);
     info->down_h = next;
+}
+void presumMalloc(info_t *inf){
+    inf->presums = malloc(sizeof(long long) * inf->cnt);
 }
 int main(){
     int n, m, q, u, v, LOG = 0, op;
@@ -44,10 +51,36 @@ int main(){
         scanf("%d%d%lld", &u, &v, &len);
         up[v][0].u = u;
         up[v][0].len = len;
-        extend_down(&info[u], v);
+        extend_down(info, u, v);
     }//set direct ancestor and descendants
     up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
+        if(!info[i].cnt){
+            info[i].max_idx = -1;
+            long long nowsum = 0; int idx = i;
+            while(idx != (u = up[idx][0].u)){
+                #ifdef debug
+                printf("idx = %d, ", idx);
+                #endif
+                nowsum += up[idx][0].len;
+                if(info[u].presums == NULL){
+                    #ifdef debug
+                    printf("mallocing %d's presum\n", u);
+                    #endif
+                    presumMalloc(&info[u]);
+                    info[u].max_idx = -1;
+                }
+                info[u].presums[ info[idx].i ] = nowsum;
+                if(info[u].max_idx == -1
+                || info[u].presums[ info[u].max_idx ] < nowsum
+                || (info[u].presums[ info[u].max_idx ] == nowsum && info[u].max_idx < info[idx].i))
+                    info[u].max_idx = info[idx].i;
+                #ifdef debug
+                printf("%d's %dth presum = %lld, max_idx = %d\n", u, info[idx].i, info[u].presums[ info[idx].i ], info[u].max_idx);
+                #endif
+                idx = up[idx][0].u;
+            }
+        }
         for(int j = 1; j < LOG; j++){
             up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
             up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
@@ -78,9 +111,6 @@ int main(){
             int ans = cur;
             while(ans != 0 && ti >= up[ans][0].len){
                 int low = 0, high = LOG - 1, idx = ans;
-                #ifdef debug
-                printf("idx = %d\n", idx);
-                #endif
                 long long len = 0; 
                 while(low <= high){
                     int mid = (low + high) >> 1;
@@ -95,27 +125,18 @@ int main(){
             }
             printf("%d\n", ans);
         }
-        else if(op == 5){
-            scanf("%lld", &pi);
-            int idx = cur, neg = -1;
-            while(idx != 0){
-                if(info[idx].has == false){
-                    info[idx].treasure = pi;
-                    info[idx].has = true;
-                    break;
+        else if(op == 4){
+            if(info[cur].max_idx != -1) printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
+            else{
+                if(info[cur].down_h == NULL) printf("0\n");
+                else{//just being removed but still have down paths
+                    info[cur].max_idx = info[cur].cur_idx;
+                    for(int i = info[cur].cur_idx + 1; i < info[cur].cnt; i++){
+                        if(info[cur].presums[i] >= info[cur].presums[ info[cur].max_idx ])
+                            info[cur].max_idx = i;
+                    }
+                    printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
                 }
-                long long old = info[idx].treasure;
-                info[idx].treasure = pi;
-                if(old < up[idx][0].len){
-                    if(neg == -1) neg = (old < 0) ? idx : up[idx][0].u;
-                    pi = -1;
-                }
-                else pi = old - up[idx][0].len;
-                idx = up[idx][0].u;
-            }
-            if(idx == 0){
-                if(pi >= 0) printf("value remaining is %lld\n", pi);
-                else printf("value lost at %d\n", neg);
             }
         }
         else break;
