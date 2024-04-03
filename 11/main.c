@@ -3,26 +3,26 @@
 #include <stdbool.h>
 typedef struct down_t{
     int v;
-    struct down_t *next;
+    long long mx;
+    struct down_t *prev, *next;
 }down_t;
 typedef struct info_t{
     down_t *down_h, *down_cur;
     int i;//ith v of its direct up
     int cnt, collected;//cnt of its direct downs
-    int max_idx, cur_idx;
     long long *presums;
 }info_t;
 typedef struct up_t{
     int u;
     long long len;//len with u
 }up_t;
-down_t *gen_down(int v){
+down_t *gen_down(int v, down_t *prev){
     down_t *d = malloc(sizeof(down_t));
-    d->v = v, d->next = NULL;
+    d->v = v, d->next = NULL, d->prev = prev;
     return d;
 }
 void extend_down(info_t info[], int u, int v){
-    down_t *dwn = gen_down(v);
+    down_t *dwn = gen_down(v, info[u].down_cur);
     if(info[u].down_h == NULL) info[u].down_h = dwn;
     else info[u].down_cur->next = dwn;
     info[v].i = info[u].cnt;
@@ -31,13 +31,14 @@ void extend_down(info_t info[], int u, int v){
 }
 void pop_down(info_t *info){
     down_t *next = info->down_h->next;
-    if(info->cur_idx == info->max_idx) info->max_idx = -1;
-    info->cur_idx += 1;
     free(info->down_h);
     info->down_h = next;
 }
 void pmalloc(info_t *inf){
     inf->presums = malloc(inf->cnt * sizeof(long long));
+}
+long long max(long long a, long long b){
+    return (a > b) ? a : b;
 }
 int main(){
     int n, m, q, u, v, LOG = 0, op;
@@ -56,7 +57,6 @@ int main(){
     up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
         if(!info[i].cnt){
-            info[i].max_idx = -1;
             long long nowsum = 0; int idx = i; bool allset = true;//all children's info are set
             while(allset){
                 allset = false;
@@ -64,14 +64,19 @@ int main(){
                 u = up[idx][0].u;
                 if(info[u].presums == NULL) pmalloc(&info[u]);
                 info[u].presums[ info[idx].i ] = nowsum;
-                if(!info[u].collected
-                || info[u].presums[ info[u].max_idx ] < nowsum
-                || (info[u].presums[ info[u].max_idx ] == nowsum && info[u].max_idx < info[idx].i))
-                    info[u].max_idx = info[idx].i;
                 info[u].collected += 1;
-                allset = (info[u].collected == info[u].cnt);
-                nowsum = info[u].presums[ info[u].max_idx ];
-                idx = up[idx][0].u;
+                if(info[u].collected == info[u].cnt){
+                    allset = true;
+                    down_t *ptr = info[u].down_cur;
+                    ptr->mx = info[u].presums[ info[u].cnt - 1 ];
+                    ptr = ptr->prev;
+                    for(int j = info[u].cnt - 2; j >= 0; j--){
+                        ptr->mx = max(ptr->next->mx, info[u].presums[j]);
+                        ptr = ptr->prev;
+                    }
+                    nowsum = info[u].down_h->mx;
+                    idx = up[idx][0].u;
+                }
             }
         }
         for(int j = 1; j < LOG; j++){
@@ -119,20 +124,8 @@ int main(){
             printf("%d\n", ans);
         }
         else if(op == 4){
-            if(info[cur].max_idx != -1) printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
-            else{
-                if(info[cur].down_h == NULL){
-                    printf("0\n");
-                }
-                else{//just being removed but still have down paths
-                    info[cur].max_idx = info[cur].cur_idx;
-                    for(int i = info[cur].cur_idx + 1; i < info[cur].cnt; i++){
-                        if(info[cur].presums[i] >= info[cur].presums[ info[cur].max_idx ])
-                            info[cur].max_idx = i;
-                    }
-                    printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
-                }
-            }
+            if(info[cur].down_h == NULL) printf("0\n");
+            else printf("%lld\n", info[cur].down_h->mx);
         }
         else break;
     }
