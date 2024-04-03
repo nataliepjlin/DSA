@@ -36,8 +36,8 @@ void pop_down(info_t *info){
     free(info->down_h);
     info->down_h = next;
 }
-void presumMalloc(info_t *inf){
-    inf->presums = malloc(sizeof(long long) * inf->cnt);
+void pcalloc(info_t *inf){
+    inf->presums = calloc(inf->cnt, sizeof(long long));
 }
 int main(){
     int n, m, q, u, v, LOG = 0, op;
@@ -55,32 +55,33 @@ int main(){
     }//set direct ancestor and descendants
     up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
-        // if(!info[i].cnt){
-        //     info[i].max_idx = -1;
-        //     long long nowsum = 0; int idx = i;
-        //     while(idx != (u = up[idx][0].u)){
-        //         #ifdef debug
-        //         printf("idx = %d, ", idx);
-        //         #endif
-        //         nowsum += up[idx][0].len;
-        //         if(info[u].presums == NULL){
-        //             #ifdef debug
-        //             printf("mallocing %d's presum\n", u);
-        //             #endif
-        //             presumMalloc(&info[u]);
-        //             info[u].max_idx = -1;
-        //         }
-        //         info[u].presums[ info[idx].i ] = nowsum;
-        //         if(info[u].max_idx == -1
-        //         || info[u].presums[ info[u].max_idx ] < nowsum
-        //         || (info[u].presums[ info[u].max_idx ] == nowsum && info[u].max_idx < info[idx].i))
-        //             info[u].max_idx = info[idx].i;
-        //         #ifdef debug
-        //         printf("%d's %dth presum = %lld, max_idx = %d\n", u, info[idx].i, info[u].presums[ info[idx].i ], info[u].max_idx);
-        //         #endif
-        //         idx = up[idx][0].u;
-        //     }
-        // }
+        if(!info[i].cnt){
+            info[i].max_idx = -1;
+            long long nowsum = 0; int idx = i;
+            while(idx != (u = up[idx][0].u)){
+                #ifdef debug
+                printf("idx = %d, ", idx);
+                #endif
+                nowsum += up[idx][0].len;
+                if(info[u].presums == NULL){
+                    #ifdef debug
+                    printf("mallocing %d's presum\n", u);
+                    #endif
+                    pcalloc(&info[u]);
+                    info[u].max_idx = -1;
+                }
+                if(nowsum > info[u].presums[ info[idx].i ])
+                    info[u].presums[ info[idx].i ] = nowsum;
+                if(info[u].max_idx == -1
+                || info[u].presums[ info[u].max_idx ] < nowsum
+                || (info[u].presums[ info[u].max_idx ] == nowsum && info[u].max_idx < info[idx].i))
+                    info[u].max_idx = info[idx].i;
+                #ifdef debug
+                printf("%d's %dth presum = %lld, max_idx = %d\n", u, info[idx].i, info[u].presums[ info[idx].i ], info[u].max_idx);
+                #endif
+                idx = up[idx][0].u;
+            }
+        }
         for(int j = 1; j < LOG; j++){
             up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
             up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
@@ -125,20 +126,22 @@ int main(){
             }
             printf("%d\n", ans);
         }
-        // else if(op == 4){
-        //     if(info[cur].max_idx != -1) printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
-        //     else{
-        //         if(info[cur].down_h == NULL) printf("0\n");
-        //         else{//just being removed but still have down paths
-        //             info[cur].max_idx = info[cur].cur_idx;
-        //             for(int i = info[cur].cur_idx + 1; i < info[cur].cnt; i++){
-        //                 if(info[cur].presums[i] >= info[cur].presums[ info[cur].max_idx ])
-        //                     info[cur].max_idx = i;
-        //             }
-        //             printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
-        //         }
-        //     }
-        // }
+        else if(op == 4){
+            if(info[cur].max_idx != -1) printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
+            else{
+                if(info[cur].down_h == NULL){
+                    printf("0\n");
+                }
+                else{//just being removed but still have down paths
+                    info[cur].max_idx = info[cur].cur_idx;
+                    for(int i = info[cur].cur_idx + 1; i < info[cur].cnt; i++){
+                        if(info[cur].presums[i] >= info[cur].presums[ info[cur].max_idx ])
+                            info[cur].max_idx = i;
+                    }
+                    printf("%lld\n", info[cur].presums[ info[cur].max_idx ]);
+                }
+            }
+        }
         else break;
     }
     free(info);
