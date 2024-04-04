@@ -20,7 +20,7 @@ struct treasure_seq{
 typedef struct info_t{
     down_t *down_h, *down_cur;
     int i;//ith v of its direct up
-    int cnt, collected, depth;//cnt of its direct downs
+    int cnt, collected;//cnt of its direct downs
     long long *presums;
     treasure_seq *seq;//treasure sequence
 }info_t;
@@ -77,7 +77,7 @@ treasure_t *gen_t(long long val, int negpos, treasure_seq *seq, treasure_t *prev
     t->val = val, t->negpos = negpos;
     return t;
 }
-treasure_seq *gen_seq(long long val, int negpos, int depth, int cur){
+treasure_seq *gen_seq(long long val, int negpos, int cur){
     treasure_seq *seq = malloc(sizeof(treasure_seq));
     seq->top_id = seq->btm_id = cur;
     treasure_t *t = gen_t(val, negpos, seq, NULL);
@@ -98,7 +98,7 @@ int main(){
         up[v][0].len = len;
         extend_down(info, u, v);
     }//set direct ancestor and descendants
-    up[0][0].u = 0, up[0][0].len = 0, info[0].depth = -1;
+    up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
         if(!info[i].cnt){//no child
             long long nowsum = 0; int idx = i; bool allset = true;//all children's info are set
@@ -123,7 +123,6 @@ int main(){
                 }
             }
         }
-        info[i].depth = info[ up[i][0].u ].depth + 1;
         for(int j = 1; j < LOG; j++){
             up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
             up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
@@ -198,8 +197,7 @@ int main(){
                     #ifdef debug
                     printf("%d has no treasure && upstream (%d) has no seq\n", cur, u);
                     #endif
-                    info[cur].seq = gen_seq(pi, negpos, info[cur].depth, cur);
-                    assert(info[cur].seq != NULL);
+                    info[cur].seq = gen_seq(pi, negpos, cur);
                 }
             }//no merging or pushing seq up occurs here
             else{//had treasure, need to push seq up
