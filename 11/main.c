@@ -73,12 +73,14 @@ int op3(long long *ti, int cur, const int LOG, up_t up[][LOG], info_t *info){
 }
 treasure_t *gen_t(long long val, int negpos, treasure_seq *seq, treasure_t *prev){
     treasure_t *t = malloc(sizeof(treasure_t));
+    if(t == NULL) exit(1);
     t->next = NULL, t->seq = seq, t->prev = prev;
     t->val = val, t->negpos = negpos;
     return t;
 }
 treasure_seq *gen_seq(long long val, int negpos, int cur){
     treasure_seq *seq = malloc(sizeof(treasure_seq));
+    if(seq == NULL) exit(1);
     seq->top_id = seq->btm_id = cur;
     treasure_t *t = gen_t(val, negpos, seq, NULL);
     seq->top = t, seq->btm = t;
@@ -133,9 +135,6 @@ int main(){
     long long ti, pi;
     for(int i = 0; i < q; i++){
         scanf("%d", &op);
-        #ifdef debug
-        printf("\nop = %d, cur = %d\n", op, cur);
-        #endif
         if(op == 1){
             if(info[cur].down_h == NULL) printf("-1\n");
             else{
@@ -160,6 +159,7 @@ int main(){
                     }
                     info[cur].seq = NULL;
                 }
+                free(info[cur].presums);
                 cur = up[cur][0].u;
                 pop_down(&info[cur]);
                 printf("%d\n", cur);
@@ -205,22 +205,14 @@ int main(){
                 info[cur].seq->btm->next = t, info[cur].seq->btm = t;
                 info[cur].seq->btm_id = cur;
                 u = up[ info[cur].seq->top_id ][0].u;//lift top_id by 1 step
-                #ifdef debug
-                printf("seq (btm is at %d) top now push to %d, top's up = %d\n", info[cur].seq->btm_id, u, up[u][0].u);
-                #endif
+
                 if(info[ up[u][0].u ].seq != NULL){
                     info[ up[u][0].u ].seq->btm->next = info[cur].seq->top;
                     info[cur].seq->top = info[ up[u][0].u ].seq->top;
                     info[cur].seq->top_id = info[ up[u][0].u ].seq->top_id;
                     free(info[ up[u][0].u ].seq);
-                    #ifdef debug
-                    printf("merge with seq at %d, now top_id = %d\n", up[u][0].u, info[cur].seq->top_id);
-                    #endif
-                }//u(top's new position) == 0 won't be qualified for this part
+                }//top's upstream has seq
                 else{
-                    #ifdef debug
-                    printf("%d(top's upstream) has no seq, no need to merge\n", up[u][0].u);
-                    #endif
                     if(u == 0){//need print
                         if(info[cur].seq->top->negpos != -1) printf("value lost at %d\n", info[cur].seq->top->negpos);
                         else printf("value remaining is %lld\n", info[cur].seq->top->val);
@@ -229,10 +221,7 @@ int main(){
                         info[cur].seq->top = next, info[cur].seq->top->prev = NULL;
                     }
                     else info[cur].seq->top_id = u;
-                    #ifdef debug
-                    printf("info[cur].seq->top_id = %d\n", info[cur].seq->top_id);
-                    #endif
-                }
+                }//top's upstream has no seq
             }
         }
         else break;
