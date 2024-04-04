@@ -55,7 +55,7 @@ long long max(long long a, long long b){
 int op3(long long *ti, int cur, const int LOG, up_t up[][LOG], info_t *info){
     int ans = cur;
     while(ans != 0 && *ti >= up[ans][0].len){
-        int low = 0, high = info[ans].depth - 1, idx = ans;
+        int low = 0, high = LOG - 1, idx = ans;
         long long len = 0; 
         while(low <= high){
             int mid = (low + high) >> 1;
