@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <assert.h>
 typedef struct down_t{
     int v; long long mx;
-    struct down_t *prev, *next;
+    struct down_t *prev, *next;//prev for op4
 }down_t;
 typedef struct treasure_seq treasure_seq;
 typedef struct treasure_t{
     long long val;//val if reach 0
-    int negpos, depth;
+    int negpos;
     struct treasure_t *next, *prev;//prev for op2
     treasure_seq *seq;
 }treasure_t;
@@ -70,16 +71,16 @@ int op3(long long *ti, int cur, const int LOG, up_t up[][LOG], info_t *info){
     }
     return ans;
 }
-treasure_t *gen_t(long long val, int negpos, int depth, treasure_seq *seq){
+treasure_t *gen_t(long long val, int negpos, treasure_seq *seq, treasure_t *prev){
     treasure_t *t = malloc(sizeof(treasure_t));
-    t->next = NULL, t->seq = seq;
-    t->val = val, t->negpos = negpos, t->depth = depth;
+    t->next = NULL, t->seq = seq, t->prev = prev;
+    t->val = val, t->negpos = negpos;
     return t;
 }
 treasure_seq *gen_seq(long long val, int negpos, int depth, int cur){
     treasure_seq *seq = malloc(sizeof(treasure_seq));
     seq->top_id = seq->btm_id = cur;
-    treasure_t *t = gen_t(val, negpos, depth, seq);
+    treasure_t *t = gen_t(val, negpos, seq, NULL);
     seq->top = t, seq->btm = t;
 }
 int main(){
@@ -145,17 +146,20 @@ int main(){
         else if(op == 2){
             if(cur == 0) printf("-1\n");
             else{
-                // if(info[cur].seq != NULL){
-                //     if(info[cur].seq->top_id == cur){
-                //         free(info[cur].seq->top);
-                //         free(info[cur].seq);
-                //         info[cur].seq = NULL;//neccessary?
-                //     }
-                //     else{
-                //         info[cur].seq->btm;//need DLL!!!!
-                //         info[ up[cur][0].u ].seq = info[cur].seq;
-                //     }
-                // }
+                if(info[cur].seq != NULL){//has treasure
+                    if(info[cur].seq->top_id == cur){
+                        free(info[cur].seq->top);
+                        free(info[cur].seq);
+                    }//only one treasure in this seq
+                    else{//size >= 2
+                        treasure_t *prev = info[cur].seq->btm->prev;//need DLL!!!!
+                        free(info[cur].seq->btm);
+                        info[cur].seq->btm = prev;
+                        info[cur].seq->btm->next = NULL;
+                        info[ up[cur][0].u ].seq = info[cur].seq;
+                    }
+                    info[cur].seq = NULL;
+                }
                 cur = up[cur][0].u;
                 pop_down(&info[cur]);
                 printf("%d\n", cur);
@@ -170,66 +174,67 @@ int main(){
             if(info[cur].down_h == NULL) printf("0\n");
             else printf("%lld\n", info[cur].down_h->mx);
         }
-        // else if(op == 5){
-        //     scanf("%lld", &pi);
-        //     int furthest = op3(&pi, cur, LOG, up, info);
-        //     int negpos = up[ furthest ][0].u - (furthest == 0);
-        //     #ifdef debug
-        //     printf("furthest = %d, value at that pos = %lld; negpos = %d\n", furthest, pi, negpos);
-        //     #endif
-        //     if(info[cur].seq == NULL){
-        //         u = up[cur][0].u;
-        //         if(info[u].seq != NULL){
-        //             #ifdef debug
-        //             printf("%d's direct upstream(%d) has seq, extend\n", cur, u);
-        //             #endif
-        //             treasure_t *t = gen_t(pi, negpos, info[cur].depth,info[u].seq);
-        //             info[cur].seq = info[u].seq;
-        //             info[cur].seq->btm->next = t, info[cur].seq->btm = t;
-        //             info[cur].seq->btm_id = cur;
-        //             info[u].seq = NULL;
-        //         }
-        //         else{
-        //             #ifdef debug
-        //             printf("no treasure && no upstream seq at %d\n", cur);
-        //             #endif
-        //             info[cur].seq = gen_seq(pi, negpos, info[cur].depth, cur);
-        //         }
-        //     }//no merging or pushing seq up occurs here
-        //     else{//had treasure, need to push seq up
-        //         treasure_t *t = gen_t(pi, negpos, info[cur].depth, info[cur].seq);
-        //         info[cur].seq->btm->next = t, info[cur].seq->btm = t;
-        //         info[cur].seq->btm_id = cur;
-        //         u = up[ info[cur].seq->top_id ][0].u;//lift top_id by 1 step
-        //         #ifdef debug
-        //         printf("seq (btm is at %d) top now push to %d, top's up = %d\n", info[cur].seq->btm_id, u, up[u][0].u);
-        //         #endif
-        //         if(info[ up[u][0].u ].seq != NULL){
-        //             #ifdef debug
-        //             printf("need to merge seq\n");
-        //             #endif
-        //             info[ up[u][0].u ].seq->btm->next = info[cur].seq->top;
-        //             info[ up[u][0].u ].seq->btm = info[cur].seq->btm;
-        //             info[ up[u][0].u ].seq->btm_id = info[cur].seq->btm_id;
-        //             info[cur].seq->top = info[ up[u][0].u ].seq->top;
-        //             info[cur].seq->top_id = info[ up[u][0].u ].seq->top_id;
-        //             info[ up[u][0].u ].seq = NULL;
-        //         }
-        //         else{
-        //             #ifdef debug
-        //             printf("info[ %d ].seq = NULL, no need to merge\n", up[u][0].u);
-        //             #endif
-        //             info[cur].seq->top_id = u;
-        //             if(info[cur].seq->top_id == 0){//need print
-        //                 if(info[cur].seq->top->negpos != -1) printf("value lost at %d\n", info[cur].seq->top->negpos);
-        //                 else printf("value remaining is %lld\n", info[cur].seq->top->val);
-        //                 treasure_t *next = info[cur].seq->top->next;
-        //                 free(info[cur].seq->top);
-        //                 info[cur].seq->top = next;//top->prev = NULL
-        //             }
-        //         }
-        //     }
-        // }
+        else if(op == 5){
+            scanf("%lld", &pi);
+            int furthest = op3(&pi, cur, LOG, up, info);
+            int negpos = up[ furthest ][0].u - (furthest == 0);
+            #ifdef debug
+            printf("furthest = %d, value at that pos = %lld; negpos = %d\n", furthest, pi, negpos);
+            #endif
+            if(info[cur].seq == NULL){
+                u = up[cur][0].u;
+                if(info[u].seq != NULL){
+                    #ifdef debug
+                    printf("%d's direct upstream(%d) has seq, extend\n", cur, u);
+                    #endif
+                    info[cur].seq = info[u].seq;
+                    treasure_t *t = gen_t(pi, negpos, info[cur].seq, info[cur].seq->btm);
+                    info[cur].seq->btm->next = t, info[cur].seq->btm = t;
+                    info[cur].seq->btm_id = cur;
+                    info[u].seq = NULL;
+                }
+                else{
+                    #ifdef debug
+                    printf("no treasure && no upstream seq at %d\n", cur);
+                    #endif
+                    info[cur].seq = gen_seq(pi, negpos, info[cur].depth, cur);
+                }
+            }//no merging or pushing seq up occurs here
+            else{//had treasure, need to push seq up
+                treasure_t *t = gen_t(pi, negpos, info[cur].seq, info[cur].seq->btm);
+                info[cur].seq->btm->next = t, info[cur].seq->btm = t;
+                info[cur].seq->btm_id = cur;
+                u = up[ info[cur].seq->top_id ][0].u;//lift top_id by 1 step
+                #ifdef debug
+                printf("seq (btm is at %d) top now push to %d, top's up = %d\n", info[cur].seq->btm_id, u, up[u][0].u);
+                #endif
+                if(info[ up[u][0].u ].seq != NULL){
+                    info[ up[u][0].u ].seq->btm->next = info[cur].seq->top;
+                    info[cur].seq->top = info[ up[u][0].u ].seq->top;
+                    info[cur].seq->top_id = info[ up[u][0].u ].seq->top_id;
+                    free(info[ up[u][0].u ].seq);
+                    #ifdef debug
+                    printf("merge with seq at %d, now top_id = %d\n", up[u][0].u, info[cur].seq->top_id);
+                    #endif
+                }//u(top's new position) == 0 won't be qualified for this part
+                else{
+                    #ifdef debug
+                    printf("%d(top's upstream) has no seq, no need to merge\n", up[u][0].u);
+                    #endif
+                    if(u == 0){//need print
+                        if(info[cur].seq->top->negpos != -1) printf("value lost at %d\n", info[cur].seq->top->negpos);
+                        else printf("value remaining is %lld\n", info[cur].seq->top->val);
+                        treasure_t *next = info[cur].seq->top->next;
+                        free(info[cur].seq->top);
+                        info[cur].seq->top = next, info[cur].seq->top->prev = NULL;
+                    }
+                    else info[cur].seq->top_id = u;
+                    #ifdef debug
+                    printf("info[cur].seq->top_id = %d\n", info[cur].seq->top_id);
+                    #endif
+                }
+            }
+        }
         else break;
     }
     free(info);
