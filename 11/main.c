@@ -73,14 +73,14 @@ int op3(long long *ti, int cur, const int LOG, up_t up[][LOG], info_t *info){
 }
 treasure_t *gen_t(long long val, int negpos, treasure_seq *seq, treasure_t *prev){
     treasure_t *t = malloc(sizeof(treasure_t));
-    if(t == NULL) exit(1);
+    if(t == NULL) exit(0);
     t->next = NULL, t->seq = seq, t->prev = prev;
     t->val = val, t->negpos = negpos;
     return t;
 }
 treasure_seq *gen_seq(long long val, int negpos, int cur){
     treasure_seq *seq = malloc(sizeof(treasure_seq));
-    if(seq == NULL) exit(1);
+    if(seq == NULL) exit(0);
     seq->top_id = seq->btm_id = cur;
     treasure_t *t = gen_t(val, negpos, seq, NULL);
     seq->top = t, seq->btm = t;
