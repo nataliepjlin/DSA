@@ -6,17 +6,15 @@ typedef struct down_t{
     int v; long long mx;
     struct down_t *prev, *next;//prev for op4
 }down_t;
-typedef struct treasure_seq treasure_seq;
 typedef struct treasure_t{
     long long val;//val if reach 0
     int negpos;
     struct treasure_t *next, *prev;//prev for op2
-    treasure_seq *seq;
 }treasure_t;
-struct treasure_seq{
+typedef struct treasure_seq{
     int top_id, btm_id;//dungeon id where top & btm are located
     treasure_t *top, *btm;
-};
+}treasure_seq;
 typedef struct info_t{
     down_t *down_h, *down_cur;
     int i;//ith v of its direct up
@@ -71,18 +69,16 @@ int op3(long long *ti, int cur, const int LOG, up_t up[][LOG], info_t *info){
     }
     return ans;
 }
-treasure_t *gen_t(long long val, int negpos, treasure_seq *seq, treasure_t *prev){
+treasure_t *gen_t(long long val, int negpos, treasure_t *prev){
     treasure_t *t = malloc(sizeof(treasure_t));
-    if(t == NULL) exit(0);
-    t->next = NULL, t->seq = seq, t->prev = prev;
+    t->next = NULL, t->prev = prev;
     t->val = val, t->negpos = negpos;
     return t;
 }
 treasure_seq *gen_seq(long long val, int negpos, int cur){
     treasure_seq *seq = malloc(sizeof(treasure_seq));
-    if(seq == NULL) exit(0);
     seq->top_id = seq->btm_id = cur;
-    treasure_t *t = gen_t(val, negpos, seq, NULL);
+    treasure_t *t = gen_t(val, negpos, NULL);
     seq->top = t, seq->btm = t;
     return seq;
 }
@@ -103,16 +99,18 @@ int main(){
     up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
         if(!info[i].cnt){//no child
-            long long nowsum = 0; int idx = i; bool allset = true;//all children's info are set
-            while(allset){
-                allset = false;
+            long long nowsum = 0; 
+            int idx = i; 
+            bool ready = true;//all children's info are set
+            while(ready){
+                ready = false;
                 nowsum += up[idx][0].len;
                 u = up[idx][0].u;
                 if(info[u].presums == NULL) pmalloc(&info[u]);
                 info[u].presums[ info[idx].i ] = nowsum;
                 info[u].collected += 1;
                 if(info[u].collected == info[u].cnt){
-                    allset = true;
+                    ready = true;
                     down_t *ptr = info[u].down_cur;
                     ptr->mx = info[u].presums[ info[u].cnt - 1 ];
                     ptr = ptr->prev;
@@ -120,6 +118,8 @@ int main(){
                         ptr->mx = max(ptr->next->mx, info[u].presums[j]);
                         ptr = ptr->prev;
                     }
+                    free(info[u].presums);
+                    info[u].presums = NULL;
                     nowsum = info[u].down_h->mx;
                     idx = up[idx][0].u;
                 }
@@ -135,6 +135,9 @@ int main(){
     long long ti, pi;
     for(int i = 0; i < q; i++){
         scanf("%d", &op);
+        #ifdef debug
+        printf("\nop = %d, cur = %d\n", op, cur);
+        #endif
         if(op == 1){
             if(info[cur].down_h == NULL) printf("-1\n");
             else{
@@ -155,14 +158,17 @@ int main(){
                         free(info[cur].seq->btm);
                         info[cur].seq->btm = prev;
                         info[cur].seq->btm->next = NULL;
+                        info[cur].seq->btm_id = up[cur][0].u;
                         info[ up[cur][0].u ].seq = info[cur].seq;
                     }
                     info[cur].seq = NULL;
                 }
-                free(info[cur].presums);
                 cur = up[cur][0].u;
                 pop_down(&info[cur]);
                 printf("%d\n", cur);
+                #ifdef debug
+                printf("btm_id = %d\n", info[cur].seq->btm_id);
+                #endif
             }
         }
         else if(op == 3){
@@ -188,7 +194,7 @@ int main(){
                     printf("%d's direct upstream(%d) has seq, extend\n", cur, u);
                     #endif
                     info[cur].seq = info[u].seq;
-                    treasure_t *t = gen_t(pi, negpos, info[cur].seq, info[cur].seq->btm);
+                    treasure_t *t = gen_t(pi, negpos, info[cur].seq->btm);
                     info[cur].seq->btm->next = t, info[cur].seq->btm = t;
                     info[cur].seq->btm_id = cur;
                     info[u].seq = NULL;
@@ -201,7 +207,7 @@ int main(){
                 }
             }//no merging or pushing seq up occurs here
             else{//had treasure, need to push seq up
-                treasure_t *t = gen_t(pi, negpos, info[cur].seq, info[cur].seq->btm);
+                treasure_t *t = gen_t(pi, negpos, info[cur].seq->btm);
                 info[cur].seq->btm->next = t, info[cur].seq->btm = t;
                 info[cur].seq->btm_id = cur;
                 u = up[ info[cur].seq->top_id ][0].u;//lift top_id by 1 step
