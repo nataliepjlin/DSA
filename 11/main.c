@@ -162,13 +162,13 @@ int main(){
                         info[ up[cur][0].u ].seq = info[cur].seq;
                     }
                     info[cur].seq = NULL;
+                    #ifdef debug
+                    printf("btm_id = %d\n", info[up[cur][0].u].seq->btm_id);
+                    #endif
                 }
                 cur = up[cur][0].u;
                 pop_down(&info[cur]);
                 printf("%d\n", cur);
-                #ifdef debug
-                printf("btm_id = %d\n", info[cur].seq->btm_id);
-                #endif
             }
         }
         else if(op == 3){
@@ -182,6 +182,10 @@ int main(){
         }
         else if(op == 5){
             scanf("%lld", &pi);
+            if(cur == 0){
+                printf("value remaining is %lld\n", pi);
+                continue;
+            }
             int furthest = op3(&pi, cur, LOG, up, info);
             int negpos = up[ furthest ][0].u - (furthest == 0);
             #ifdef debug
@@ -197,7 +201,7 @@ int main(){
                     treasure_t *t = gen_t(pi, negpos, info[cur].seq->btm);
                     info[cur].seq->btm->next = t, info[cur].seq->btm = t;
                     info[cur].seq->btm_id = cur;
-                    info[u].seq = NULL;
+                    // info[u].seq = NULL;
                 }
                 else{
                     #ifdef debug
@@ -217,6 +221,7 @@ int main(){
                     info[cur].seq->top = info[ up[u][0].u ].seq->top;
                     info[cur].seq->top_id = info[ up[u][0].u ].seq->top_id;
                     free(info[ up[u][0].u ].seq);
+                    info[ up[u][0].u ].seq = NULL;
                 }//top's upstream has seq
                 else{
                     if(u == 0){//need print
