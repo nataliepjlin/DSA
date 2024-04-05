@@ -254,7 +254,7 @@ int main(){
             printf("%d\n", vec->duns[ans].id);
         }
         else if(op == 4){
-            if(info[cur].down_h == NULL) printf("%d\n", cur);
+            if(info[cur].down_h == NULL) printf("0\n");
             else printf("%lld\n", info[cur].down_h->mx);
         }
         else if(op == 5){
