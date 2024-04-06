@@ -4,7 +4,7 @@
 #include <assert.h>
 typedef struct down_t{
     int v; long long mx;
-    struct down_t *prev, *next;//prev is for op4
+    struct down_t *prev, *next;//prev for op4
 }down_t;
 typedef struct treasure_t{
     long long val;//val if reach 0
@@ -17,19 +17,21 @@ typedef struct treasure_seq{
 }treasure_seq;
 typedef struct info_t{
     down_t *down_h, *down_cur;
-    int u; long long len;
     int i;//ith v of its direct up
     int cnt, collected;//cnt of its direct downs
     long long *presums;
     treasure_seq *seq;//treasure sequence
-    bool hasU;
 }info_t;
-down_t *gen_down(const int v, down_t *prev){
+typedef struct up_t{
+    int u;
+    long long len;//len with u
+}up_t;
+down_t *gen_down(int v, down_t *prev){
     down_t *d = malloc(sizeof(down_t));
-    d->v = v, d->next = NULL, d->prev = prev, d->mx = -1;
+    d->v = v, d->next = NULL, d->prev = prev;
     return d;
 }
-void extend_down(info_t *info, const int u, const int v){
+void extend_down(info_t info[], int u, int v){
     down_t *dwn = gen_down(v, info[u].down_cur);
     if(info[u].down_h == NULL) info[u].down_h = dwn;
     else info[u].down_cur->next = dwn;
@@ -37,128 +39,34 @@ void extend_down(info_t *info, const int u, const int v){
     info[u].cnt += 1;
     info[u].down_cur = dwn;
 }
-void remove_down(info_t *info, const int id){
-    down_t *next = info[id].down_h->next;
-    free(info[id].down_h);
+void pop_down(info_t *info){
+    down_t *next = info->down_h->next;
+    free(info->down_h);
     if(next != NULL) next->prev = NULL;
-    else info[id].down_cur = NULL;
-    info[id].down_h = next;
+    else info->down_cur = NULL;
+    info->down_h = next;
 }
-void destroy_down(info_t *info, const int id){
-    down_t *d = info[id].down_h;
-    while(d != NULL){
-        down_t *next = d->next;
-        free(d);
-        d = next;
-    }
-    info[id].down_h = NULL;
-    info[id].down_cur = NULL;
-}
-void destroy_seq(treasure_seq *seq){
-    treasure_t *t = seq->top;
-    while(t != NULL){
-        treasure_t *next = t->next;
-        free(t);
-        t = next;
-    }
-    seq->top = NULL, seq->btm = NULL;
-    free(seq);
-}
-void destroy_info(info_t *info, const int n){
-    for(int i = 0; i < n; i++){
-        destroy_down(info, i);
-        if(info[i].seq != NULL){
-            destroy_seq(info[i].seq);
-            info[i].seq = NULL;
-        }
-    }
-    free(info);
+void pmalloc(info_t *inf){
+    inf->presums = malloc(inf->cnt * sizeof(long long));
 }
 long long max(long long a, long long b){
     return (a > b) ? a : b;
 }
-void set_furthest_descendant(info_t *info, const int cur){
-    long long nowsum = 0; 
-    int idx = cur; 
-    bool ready = true;//all children's info are set
-    while(ready && info[idx].hasU){
-        #ifdef debug
-        printf("idx = %d\n", idx);
-        #endif
-        ready = false;
-        nowsum += info[idx].len;
-        int u = info[idx].u;
-        if(info[u].presums == NULL) info[u].presums = malloc(info[u].cnt * sizeof(long long));
-        info[u].presums[ info[idx].i ] = nowsum;
-        #ifdef debug
-        printf("info[%d].presums[%d] = %lld\n", u, info[idx].i, info[u].presums[ info[idx].i ]);
-        #endif
-        info[u].collected += 1;
-        if(info[u].collected == info[u].cnt){
-            ready = true;
-            #ifdef debug
-            printf("info[%d]'s child info collecting job complete\n", u);
-            #endif
-            down_t *ptr = info[u].down_cur;
-            ptr->mx = info[u].presums[ info[u].cnt - 1 ];
-            ptr = ptr->prev;
-            for(int j = info[u].cnt - 2; j >= 0; j--){
-                ptr->mx = max(ptr->next->mx, info[u].presums[j]);
-                ptr = ptr->prev;
+int op3(long long *ti, int cur, const int LOG, up_t up[][LOG], info_t *info){
+    int ans = cur;
+    while(ans != 0 && *ti >= up[ans][0].len){
+        int low = 0, high = LOG - 1, idx = ans;
+        long long len = 0; 
+        while(low <= high){
+            int mid = (low + high) >> 1;
+            if(up[idx][mid].len <= *ti){
+                ans = up[idx][mid].u;
+                len = up[idx][mid].len;
+                low = mid + 1;
             }
-            free(info[u].presums);
-            info[u].presums = NULL;
-            nowsum = info[u].down_h->mx;
-            idx = info[idx].u;
+            else high = mid - 1;
         }
-    }
-}
-typedef struct dun_t{
-    long long presum;
-    int id;
-}dun_t;
-typedef struct vec_t{
-    dun_t *duns;
-    int size;
-}vec_t;
-vec_t *gen_vec(){
-    vec_t *vec = malloc(sizeof(vec_t));
-    vec->duns = malloc(sizeof(dun_t));
-    vec->duns[0].id = 0, vec->duns[0].presum = 0;
-    vec->size = 1;
-    return vec;
-}
-void destroy_vec(vec_t *vec){
-    free(vec->duns);
-    free(vec);
-}
-void push_back(vec_t *vec, const int id, const long long len){
-    vec->size += 1;
-    vec->duns = realloc(vec->duns, vec->size * sizeof(dun_t));
-    vec->duns[ vec->size - 1 ].id = id;
-    vec->duns[ vec->size - 1 ].presum = vec->duns[ vec->size - 2 ].presum + len;
-}
-void pop_back(vec_t *vec){
-    vec->size -= 1;
-}
-void print_vec(vec_t *vec){
-    printf("\nprinting vec: ");
-    for(int i = 0; i < vec->size; i++){
-        printf("(%d, %lld)->", vec->duns[i].id, vec->duns[i].presum);
-    }
-    printf("X\n");
-}
-int op3(vec_t *vec, const long long val){
-    int low = 0, high = vec->size - 1, cur = vec->size - 1;
-    int ans = high;
-    while(low <= high){
-        int mid = (low + high) >> 1;
-        long long dist = vec->duns[cur].presum - vec->duns[mid].presum;
-        if(dist <= val){
-            ans = mid;
-            high = mid - 1;
-        }
-        else low = mid + 1;
+        *ti -= len;
     }
     return ans;
 }
@@ -175,48 +83,66 @@ treasure_seq *gen_seq(long long val, int negpos, int cur){
     seq->top = t, seq->btm = t;
     return seq;
 }
-void print_seq(treasure_seq *seq){
-    printf("printing seq: ");
-    treasure_t *t = seq->top;
-    while(t->next != NULL){
-        printf("(%lld, %d)--", t->val, t->negpos);
-        t = t->next;
-    }
-    assert(t == seq->btm);
-    printf("(%lld, %d)\n", t->val, t->negpos);
-}
 int main(){
-    int n, m, q;
+    int n, m, q, u, v, LOG = 0, op;
+    long long len;
     scanf("%d%d%d", &n, &m, &q);
-    info_t *info = calloc(n, sizeof(info_t));
-    int u, v; long long len;
+    while((1 << LOG) <= n) LOG++;
+    LOG++;
+    up_t up[n][LOG];
+    info_t *info = calloc(n,  sizeof(info_t));
     for(int i = 0; i < m; i++){
         scanf("%d%d%lld", &u, &v, &len);
-        info[v].u = u, info[v].len = len;
-        info[v].hasU = true;
+        up[v][0].u = u;
+        up[v][0].len = len;
         extend_down(info, u, v);
-        #ifdef debug
-        printf("info[%d]'s %dth down = %d\n", u, info[u].cnt - 1, info[u].down_cur->v);
-        printf("info[%d].u = %d, len = %lld\n", v, info[v].u, info[v].len);
-        #endif
-    }
-    info[0].u = -1;
+    }//set direct ancestor and descendants
+    up[0][0].u = 0, up[0][0].len = 0;
     for(int i = 0; i < n; i++){
-        if(info[i].hasU && !info[i].cnt) set_furthest_descendant(info, i);
-    }
-    
-    vec_t *vec = gen_vec();
-    int cur = 0, op; long long val;
+        if(!info[i].cnt){//no child
+            long long nowsum = 0; 
+            int idx = i; 
+            bool ready = true;//all children's info are set
+            while(ready){
+                ready = false;
+                nowsum += up[idx][0].len;
+                u = up[idx][0].u;
+                if(info[u].presums == NULL) pmalloc(&info[u]);
+                info[u].presums[ info[idx].i ] = nowsum;
+                info[u].collected += 1;
+                if(info[u].collected == info[u].cnt){
+                    ready = true;
+                    down_t *ptr = info[u].down_cur;
+                    ptr->mx = info[u].presums[ info[u].cnt - 1 ];
+                    ptr = ptr->prev;
+                    for(int j = info[u].cnt - 2; j >= 0; j--){
+                        ptr->mx = max(ptr->next->mx, info[u].presums[j]);
+                        ptr = ptr->prev;
+                    }
+                    free(info[u].presums);
+                    info[u].presums = NULL;
+                    nowsum = info[u].down_h->mx;
+                    idx = up[idx][0].u;
+                }
+            }
+        }
+        for(int j = 1; j < LOG; j++){
+            up[i][j].u = up[ up[i][j - 1].u ][j - 1].u;
+            up[i][j].len = up[ up[i][j - 1].u ][j - 1].len + up[i][j - 1].len;
+        }
+    }//binary lifting
+
+    int cur = 0;
+    long long ti, pi;
     for(int i = 0; i < q; i++){
-        #ifdef debug
-        print_vec(vec);
-        #endif
         scanf("%d", &op);
+        #ifdef debug
+        printf("\nop = %d, cur = %d\n", op, cur);
+        #endif
         if(op == 1){
             if(info[cur].down_h == NULL) printf("-1\n");
             else{
                 cur = info[cur].down_h->v;
-                push_back(vec, cur, info[cur].len);
                 printf("%d\n", cur);
             }
         }
@@ -225,111 +151,102 @@ int main(){
             else{
                 if(info[cur].seq != NULL){
                     if(info[cur].seq->top == info[cur].seq->btm){
+                        free(info[cur].seq->top);
+                        free(info[cur].seq);
                         #ifdef debug
-                        printf("one treasure only, destroy directly\n");
+                        printf("only one treasure in this seq, dumped\n");
                         #endif
-                        destroy_seq(info[cur].seq);
                     }
                     else{
                         treasure_t *prev = info[cur].seq->btm->prev;
                         free(info[cur].seq->btm);
                         info[cur].seq->btm = prev;
                         info[cur].seq->btm->next = NULL;
-                        info[cur].seq->btm_id = info[cur].u;
-                        info[ info[cur].u ].seq = info[cur].seq;
+                        info[cur].seq->btm_id = up[cur][0].u;
+                        info[ up[cur][0].u ].seq = info[cur].seq;
                         #ifdef debug
-                        print_seq(info[ info[cur].u ].seq);
+                        printf("info[%d].seq->top_id = %d, btm_id = %d\n", up[cur][0].u, info[ up[cur][0].u ].seq->top_id, info[ up[cur][0].u ].seq->btm_id);
                         #endif
                     }
                     info[cur].seq = NULL;
+                }//has treasure
+                while(info[cur].down_h != NULL){
+                    down_t *d = info[cur].down_h->next;
+                    free(info[cur].down_h);
+                    info[cur].down_h = d;
                 }
-                destroy_down(info, cur);
-                cur = info[cur].u;
-                remove_down(info, cur);
-                pop_back(vec);
+                cur = up[cur][0].u;
+                pop_down(&info[cur]);
                 printf("%d\n", cur);
             }
         }
         else if(op == 3){
-            scanf("%lld", &val);
-            int ans = op3(vec, val);
-            printf("%d\n", vec->duns[ans].id);
+            scanf("%lld", &ti);
+            int ans = op3(&ti, cur, LOG, up, info);
+            printf("%d\n", ans);
         }
         else if(op == 4){
             if(info[cur].down_h == NULL) printf("0\n");
             else printf("%lld\n", info[cur].down_h->mx);
         }
         else if(op == 5){
-            scanf("%lld", &val);
+            scanf("%lld", &pi);
             if(cur == 0){
-                printf("value remaining is %lld\n", val);
+                printf("value remaining is %lld\n", pi);
                 continue;
             }
-            int ret = op3(vec, val);
-            int negpos = info[ vec->duns[ret].id ].u;
-            if(negpos == -1) val -= vec->duns[ vec->size - 1 ].presum;
+            int furthest = op3(&pi, cur, LOG, up, info);
+            if(furthest < 0) break;//furthest out of range maybe??
+            int negpos = up[furthest][0].u - (furthest == 0);
             #ifdef debug
-            printf("ret = %d, id = %d, negpos = %d, val = %lld\n", ret, vec->duns[ret].id, negpos, val);
+            printf("furthest = %d, value at that pos = %lld; negpos = %d\n", furthest, pi, negpos);
             #endif
             if(info[cur].seq == NULL){
-                int cur_top = info[cur].u;
-                if(info[cur_top].seq != NULL){
+                u = up[cur][0].u;
+                if(info[u].seq != NULL){
                     #ifdef debug
-                    printf("%d's direct upstream(%d) has seq, extend\n", cur, cur_top);
+                    printf("%d's direct upstream(%d) has seq, extend\n", cur, u);
                     #endif
-                    info[cur].seq = info[cur_top].seq;
-                    treasure_t *t = gen_t(val, negpos, info[cur].seq->btm);
+                    info[cur].seq = info[u].seq;
+                    treasure_t *t = gen_t(pi, negpos, info[cur].seq->btm);
                     info[cur].seq->btm->next = t, info[cur].seq->btm = t;
                     info[cur].seq->btm_id = cur;
-                    info[cur_top].seq = NULL;
+                    info[u].seq = NULL;
                 }
-                else info[cur].seq = gen_seq(val, negpos, cur);
-            }
+                else{
+                    info[cur].seq = gen_seq(pi, negpos, cur);
+                }
+            }//no merging or pushing seq up occurs here
             else{
-                treasure_t *t = gen_t(val, negpos, info[cur].seq->btm);
+                treasure_t *t = gen_t(pi, negpos, info[cur].seq->btm);
                 info[cur].seq->btm->next = t, info[cur].seq->btm = t;
                 info[cur].seq->btm_id = cur;
-                int new_top_id = info[ info[cur].seq->top_id ].u;
-                if(new_top_id == 0){
-                    if(info[cur].seq->top->negpos != -1) printf("value lost at %d\n", info[cur].seq->top->negpos);
-                    else printf("value remaining is %lld\n", info[cur].seq->top->val);
-                    treasure_t *next = info[cur].seq->top->next;
-                    free(info[cur].seq->top);
-                    info[cur].seq->top = next, info[cur].seq->top->prev = NULL;
-                }
-                else if(info[ info[new_top_id].u ].seq == NULL) info[cur].seq->top_id = new_top_id;
+                u = up[ info[cur].seq->top_id ][0].u;//lift top_id by 1 step
+
+                if(info[ up[u][0].u ].seq != NULL){
+                    info[ up[u][0].u ].seq->btm->next = info[cur].seq->top;
+                    info[cur].seq->top->prev = info[ up[u][0].u ].seq->btm;
+                    info[cur].seq->top = info[ up[u][0].u ].seq->top;
+                    info[cur].seq->top_id = info[ up[u][0].u ].seq->top_id;
+                    free(info[ up[u][0].u ].seq);
+                    info[ up[u][0].u ].seq = NULL;
+                }//top's upstream has seq
                 else{
-                    info[ info[new_top_id].u ].seq->btm->next = info[cur].seq->top;
-                    info[cur].seq->top->prev = info[ info[new_top_id].u ].seq->btm;
-                    info[cur].seq->top_id = info[ info[new_top_id].u ].seq->top_id;
-                    info[cur].seq->top = info[ info[new_top_id].u ].seq->top;
-                    free(info[ info[new_top_id].u ].seq);
-                    info[ info[new_top_id].u ].seq = NULL;
-                }
-            }
+                    if(u == 0){//need print
+                        if(info[cur].seq->top->negpos != -1) printf("value lost at %d\n", info[cur].seq->top->negpos);
+                        else printf("value remaining is %lld\n", info[cur].seq->top->val);
+                        treasure_t *next = info[cur].seq->top->next;
+                        free(info[cur].seq->top);
+                        info[cur].seq->top = next, info[cur].seq->top->prev = NULL;
+                    }
+                    else info[cur].seq->top_id = u;
+                }//top's upstream has no seq
+            }//has treasure, need to push seq up
             #ifdef debug
-            printf("cur seq's top = %d, btm = %d\n", info[cur].seq->top_id, info[cur].seq->btm_id);
-            print_seq(info[cur].seq);//seq won't be null except cur == 0, but in that case it won't come to this line
+            printf("info[%d].seq->top_id = %d, btm_id = %d\n", cur, info[cur].seq->top_id, info[cur].seq->btm_id);
             #endif
         }
-        else{
-            scanf("%d%lld", &v, &len);
-            info[v].u = cur, info[v].len = len;
-            extend_down(info, cur, v);
-            info[cur].down_cur->mx = len + ((info[v].down_h == NULL) ? 0ll : info[v].down_h->mx);
-            #ifdef debug
-            printf("info[%d]'s %dth down = %d\n", cur, info[cur].cnt - 1, info[cur].down_cur->v);
-            printf("info[%d].u = %d, len = %lld\n", v, info[v].u, info[v].len);
-            printf("info[%d]->down_cur->mx = %lld\n", cur, info[cur].down_cur->mx);
-            #endif
-            down_t *d = info[cur].down_cur->prev;
-            while(d != NULL && d->mx < info[cur].down_cur->mx){
-                d->mx = info[cur].down_cur->mx;
-                d = d->prev;
-            }
-        }
+        else break;
     }
-    destroy_vec(vec);
-    destroy_info(info, n);
-    return 0;
+    free(info);
 }
