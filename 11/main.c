@@ -121,9 +121,9 @@ typedef struct vec_t{
     dun_t *duns;
     int size;
 }vec_t;
-vec_t *gen_vec(){
+vec_t *gen_vec(int n){
     vec_t *vec = malloc(sizeof(vec_t));
-    vec->duns = malloc(sizeof(dun_t));
+    vec->duns = malloc(sizeof(dun_t) * n);
     vec->duns[0].id = 0, vec->duns[0].presum = 0;
     vec->size = 1;
     return vec;
@@ -134,7 +134,6 @@ void destroy_vec(vec_t *vec){
 }
 void push_back(vec_t *vec, const int id, const long long len){
     vec->size += 1;
-    vec->duns = realloc(vec->duns, vec->size * sizeof(dun_t));
     vec->duns[ vec->size - 1 ].id = id;
     vec->duns[ vec->size - 1 ].presum = vec->duns[ vec->size - 2 ].presum + len;
 }
@@ -205,7 +204,7 @@ int main(){
         if(info[i].hasU && !info[i].cnt) set_furthest_descendant(info, i);
     }
     
-    vec_t *vec = gen_vec();
+    vec_t *vec = gen_vec(n);
     int cur = 0, op; long long val;
     for(int i = 0; i < q; i++){
         #ifdef debug
