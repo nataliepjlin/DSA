@@ -16,7 +16,7 @@ int genHashPrint(const int k, const int n, const char str[k][n + 1], int T[], co
     for(int c = 0; c < n; c++){
         T[c] = 0;
         for(int r = 0; r < k; r++){
-            T[c] = T[c] * d + ((isupper(str[r][c])) ? (str[r][c] - 'A') : (str[r][c] - 'a' + 26));
+            T[c] = (T[c] * d) % q + ((isupper(str[r][c])) ? (str[r][c] - 'A') : (str[r][c] - 'a' + 26));
             T[c] %= q;
         }
         if(c != 0) h =  (h * d) % q;
@@ -44,8 +44,8 @@ int main(){
     const int h = genHashPrint(k, m, pstr, P, q);
     int p = 0, t = 0;
     for(int i = 0; i < m; i++){
-        p = (p * d + P[i]) % q;
-        t = (t * d + T[i]) % q;
+        p = ((p * d) % q + P[i]) % q;
+        t = ((t * d) % q + T[i]) % q;
     }
     bool has = false;
     int cnt = 0, hits[n - m + 1];
@@ -58,7 +58,8 @@ int main(){
             }
             has = true;
         }
-        if(s < n - m) t = (d * (t - T[s] * h) + T[s + m]) % q;
+        if(s < n - m)
+            t = ((d * (t - (T[s] * h) % q)) % q + T[s + m]) % q;
     }
     if(!has) printf("-1");
     printf("\n");
