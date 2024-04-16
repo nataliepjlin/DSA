@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <math.h>
 #define d 52
 void getStr(const int k, const int n, char str[k][n + 1]){
     for(int r = 0; r < k; r++){
@@ -19,11 +18,11 @@ int genHashPrint(const int k, const int n, const char str[k][n + 1], int T[], co
         for(int r = 0; r < k; r++){
             T[c] = T[c] * d + ((isupper(str[r][c])) ? (str[r][c] - 'A') : (str[r][c] - 'a' + 26));
             T[c] %= q;
-            if(c == n - 1) h *= d;
         }
+        if(c != 0) h =  (h * d) % q;
         printf("%d%c", T[c], " \n"[c == n - 1]);
     }
-    return (h / d) % q;
+    return h;
 }
 bool realMatch(const int k, const int m, const int s, const int n, 
 const char tstr[k][n + 1], const char pstr[k][m + 1]){
