@@ -200,8 +200,10 @@ int main(){
         #endif
     }
     info[0].u = -1;
-    for(int i = 0; i < n; i++){
-        if(info[i].hasU && !info[i].cnt) set_furthest_descendant(info, i);
+    for(int i = n - 1; i >= 0; i--){
+        if(info[i].hasU && !info[i].cnt){
+            set_furthest_descendant(info, i);
+        }
     }
     
     vec_t *vec = gen_vec(n);
