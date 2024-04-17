@@ -60,11 +60,6 @@ int main(){
         if(T[i] == P[j]){
             i++, j++;
         }
-        else{
-            if(j != 0) j = lps[j - 1];
-            else i++;
-        }
-
         if(j == m){
             printf("%d ", i - j);
             if(!realMatch(k, m, n, i - j, tstr, pstr)){
@@ -72,6 +67,10 @@ int main(){
             }
             j = lps[j - 1];
             has = true;
+        }
+        else if(T[i] != P[j]){
+            if(j != 0) j = lps[j - 1];
+            else i++;
         }
     }
     if(!has) printf("-1");
