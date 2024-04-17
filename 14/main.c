@@ -27,11 +27,11 @@ const char tstr[k][n + 1], const char pstr[k][m + 1]){
     }
     return true;
 }
-void createLPS(const long long T[], const int m, int *lps){
+void createLPS(const long long P[], const int m, int *lps){
     lps[0] = 0;
     int prev = 0, cur = 1;
     while(cur < m){
-        if(T[prev] == T[cur]){
+        if(P[prev] == P[cur]){
             lps[cur] = prev + 1;
             prev++, cur++;
         }
@@ -54,7 +54,7 @@ int main(){
     genHashPrint(k, n, tstr, T, q);
     genHashPrint(k, m, pstr, P, q);
     int lps[m], i = 0, j = 0, cnt = 0, hits[n - m + 1];
-    createLPS(T, m, lps);
+    createLPS(P, m, lps);
     bool has = false;
     while(i < n){
         if(T[i] == P[j]){
