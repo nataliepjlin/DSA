@@ -11,18 +11,17 @@ typedef struct treasure_t{
     int negpos;
     struct treasure_t *next, *prev;//prev for op2
 }treasure_t;
-typedef struct treasure_seq{
-    int top_id, btm_id;//dungeon id where top & btm are located
+typedef struct treasure_queue{
     treasure_t *top, *btm;
-}treasure_seq;
+    int size;
+}treasure_queue;
 typedef struct info_t{
     down_t *down_h, *down_cur;
     int u; long long len;
     int i;//ith v of its direct up
     int cnt, collected;//cnt of its direct downs
     long long *presums;
-    treasure_seq *seq;//treasure sequence
-    bool hasU;
+    bool hasU, hasT;
 }info_t;
 down_t *gen_down(const int v, down_t *prev){
     down_t *d = malloc(sizeof(down_t));
@@ -54,23 +53,19 @@ void destroy_down(info_t *info, const int id){
     info[id].down_h = NULL;
     info[id].down_cur = NULL;
 }
-void destroy_seq(treasure_seq *seq){
-    treasure_t *t = seq->top;
+void destroy_dq(treasure_queue *q){
+    treasure_t *t = q->top;
     while(t != NULL){
         treasure_t *next = t->next;
         free(t);
         t = next;
     }
-    seq->top = NULL, seq->btm = NULL;
-    free(seq);
+    q->top = NULL, q->btm = NULL;
+    free(q);
 }
 void destroy_info(info_t *info, const int n){
     for(int i = 0; i < n; i++){
         destroy_down(info, i);
-        if(info[i].seq != NULL){
-            destroy_seq(info[i].seq);
-            info[i].seq = NULL;
-        }
     }
     free(info);
 }
@@ -167,21 +162,21 @@ treasure_t *gen_t(long long val, int negpos, treasure_t *prev){
     t->val = val, t->negpos = negpos;
     return t;
 }
-treasure_seq *gen_seq(long long val, int negpos, int cur){
-    treasure_seq *seq = malloc(sizeof(treasure_seq));
-    seq->top_id = seq->btm_id = cur;
+treasure_queue *gen_dq(long long val, int negpos){
+    treasure_queue *q = malloc(sizeof(treasure_queue));
     treasure_t *t = gen_t(val, negpos, NULL);
-    seq->top = t, seq->btm = t;
-    return seq;
+    q->top = t, q->btm = t;
+    q->size = 1;
+    return q;
 }
-void print_seq(treasure_seq *seq){
-    printf("printing seq: ");
-    treasure_t *t = seq->top;
+void print_dq(treasure_queue *dq){
+    printf("dq->size = %d\n", dq->size);
+    treasure_t *t = dq->top;
     while(t->next != NULL){
         printf("(%lld, %d)--", t->val, t->negpos);
         t = t->next;
     }
-    assert(t == seq->btm);
+    assert(t == dq->btm);
     printf("(%lld, %d)\n", t->val, t->negpos);
 }
 int main(){
@@ -208,6 +203,7 @@ int main(){
     
     vec_t *vec = gen_vec(n);
     int cur = 0, op; long long val;
+    treasure_queue *dq = NULL;
     for(int i = 0; i < q; i++){
         #ifdef debug
         print_vec(vec);
@@ -224,25 +220,18 @@ int main(){
         else if(op == 2){
             if(cur == 0) printf("-1\n");
             else{
-                if(info[cur].seq != NULL){
-                    if(info[cur].seq->top == info[cur].seq->btm){
-                        #ifdef debug
-                        printf("one treasure only, destroy directly\n");
-                        #endif
-                        destroy_seq(info[cur].seq);
+                if(info[cur].hasT){
+                    if(dq->size == 1){
+                        destroy_dq(dq);
+                        dq = NULL;
                     }
                     else{
-                        treasure_t *prev = info[cur].seq->btm->prev;
-                        free(info[cur].seq->btm);
-                        info[cur].seq->btm = prev;
-                        info[cur].seq->btm->next = NULL;
-                        info[cur].seq->btm_id = info[cur].u;
-                        info[ info[cur].u ].seq = info[cur].seq;
-                        #ifdef debug
-                        print_seq(info[ info[cur].u ].seq);
-                        #endif
+                        treasure_t *prev = dq->btm->prev;
+                        free(dq->btm);
+                        dq->btm = prev;
+                        dq->btm->next = NULL;
+                        dq->size -= 1;
                     }
-                    info[cur].seq = NULL;
                 }
                 destroy_down(info, cur);
                 cur = info[cur].u;
@@ -272,65 +261,39 @@ int main(){
             #ifdef debug
             printf("ret = %d, id = %d, negpos = %d, val = %lld\n", ret, vec->duns[ret].id, negpos, val);
             #endif
-            if(info[cur].seq == NULL){
-                int cur_top = info[cur].u;
-                if(info[cur_top].seq != NULL){
-                    #ifdef debug
-                    printf("%d's direct upstream(%d) has seq, extend\n", cur, cur_top);
-                    #endif
-                    info[cur].seq = info[cur_top].seq;
-                    treasure_t *t = gen_t(val, negpos, info[cur].seq->btm);
-                    info[cur].seq->btm->next = t, info[cur].seq->btm = t;
-                    info[cur].seq->btm_id = cur;
-                    info[cur_top].seq = NULL;
-                }
-                else info[cur].seq = gen_seq(val, negpos, cur);
-            }
+            info[cur].hasT = true;
+            if(dq == NULL) dq = gen_dq(val, negpos);
             else{
-                treasure_t *t = gen_t(val, negpos, info[cur].seq->btm);
-                info[cur].seq->btm->next = t, info[cur].seq->btm = t;
-                info[cur].seq->btm_id = cur;
-                int new_top_id = info[ info[cur].seq->top_id ].u;
-                if(new_top_id == 0){
-                    if(info[cur].seq->top->negpos != -1) printf("value lost at %d\n", info[cur].seq->top->negpos);
-                    else printf("value remaining is %lld\n", info[cur].seq->top->val);
-                    treasure_t *next = info[cur].seq->top->next;
-                    free(info[cur].seq->top);
-                    info[cur].seq->top = next, info[cur].seq->top->prev = NULL;
-                }
-                else if(info[ info[new_top_id].u ].seq == NULL) info[cur].seq->top_id = new_top_id;
-                else{
-                    info[ info[new_top_id].u ].seq->btm->next = info[cur].seq->top;
-                    info[cur].seq->top->prev = info[ info[new_top_id].u ].seq->btm;
-                    info[cur].seq->top_id = info[ info[new_top_id].u ].seq->top_id;
-                    info[cur].seq->top = info[ info[new_top_id].u ].seq->top;
-                    free(info[ info[new_top_id].u ].seq);
-                    info[ info[new_top_id].u ].seq = NULL;
+                treasure_t *t = gen_t(val, negpos, dq->btm);
+                dq->btm->next = t, dq->btm = t;
+                dq->size += 1;
+                if(dq->size == vec->size){
+                    if(dq->top->negpos != -1) printf("value lost at %d\n", dq->top->negpos);
+                    else printf("value remaining is %lld\n", dq->top->val);
+                    treasure_t *next = dq->top->next;
+                    free(dq->top);
+                    dq->top = next, dq->top->prev = NULL;
+                    dq->size -= 1;
                 }
             }
-            #ifdef debug
-            printf("cur seq's top = %d, btm = %d\n", info[cur].seq->top_id, info[cur].seq->btm_id);
-            print_seq(info[cur].seq);//seq won't be null except cur == 0, but in that case it won't come to this line
-            #endif
         }
         else{
             scanf("%d%lld", &v, &len);
             info[v].u = cur, info[v].len = len;
             extend_down(info, cur, v);
             info[cur].down_cur->mx = len + ((info[v].down_h == NULL) ? 0ll : info[v].down_h->mx);
-            #ifdef debug
-            printf("info[%d]'s %dth down = %d\n", cur, info[cur].cnt - 1, info[cur].down_cur->v);
-            printf("info[%d].u = %d, len = %lld\n", v, info[v].u, info[v].len);
-            printf("info[%d]->down_cur->mx = %lld\n", cur, info[cur].down_cur->mx);
-            #endif
             down_t *d = info[cur].down_cur->prev;
             while(d != NULL && d->mx < info[cur].down_cur->mx){
                 d->mx = info[cur].down_cur->mx;
                 d = d->prev;
             }
         }
+        #ifdef debug
+        if(dq != NULL) print_dq(dq);
+        #endif
     }
     destroy_vec(vec);
     destroy_info(info, n);
+    if(dq != NULL) destroy_dq(dq);
     return 0;
 }
