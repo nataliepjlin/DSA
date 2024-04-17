@@ -18,14 +18,31 @@ void genHashPrint(const int k, const int n, const char str[k][n + 1], long long 
         printf("%lld%c", T[c], " \n"[c == n - 1]);
     }
 }
-bool realMatch(const int k, const int m, const int s, const int n, 
+bool realMatch(const int k, const int m, const int n, const int i_j, 
 const char tstr[k][n + 1], const char pstr[k][m + 1]){
     for(int c = 0; c < m; c++){
         for(int r = 0; r < k; r++){
-            if(tstr[r][s + c] != pstr[r][c]) return false;
+            if(tstr[r][c + i_j] != pstr[r][c]) return false;            
         }
     }
     return true;
+}
+void createLPS(const long long T[], const int m, int *lps){
+    lps[0] = 0;
+    int prev = 0, cur = 1;
+    while(cur < m){
+        if(T[prev] == T[cur]){
+            lps[cur] = prev + 1;
+            prev++, cur++;
+        }
+        else{
+            if(prev != 0) prev = lps[prev - 1];
+            else{
+                lps[cur] = 0;
+                cur++;
+            }
+        }
+    }
 }
 int main(){
     int k, n, m, q;
@@ -36,28 +53,26 @@ int main(){
     getStr(k, m, pstr);
     genHashPrint(k, n, tstr, T, q);
     genHashPrint(k, m, pstr, P, q);
-    long long h = 1;
-    for(int i = 0; i < m - 1; i++) h = (h * d) % q;
+    int lps[m], i = 0, j = 0, cnt = 0, hits[n - m + 1];
+    createLPS(T, m, lps);
     bool has = false;
-    int cnt = 0, hits[n - m + 1];
-    long long p = 0, t = 0;
-    for(int i = 0; i < m; i++){
-        p = ((p * d) % q + P[i]) % q;
-        t = ((t * d) % q + T[i]) % q;
-        // printf("t = %lld, p = %lld\n", t, p);
-    }
-    for(int s = 0; s <= n - m; s++){
-        if(p == t){
-            printf("%d ", s);
-            if(!realMatch(k, m, s, n, tstr, pstr)){
-                hits[cnt] = s;
-                cnt++;
+    while(i < n){
+        if(T[i] == P[j]){
+            i++, j++;
+        }
+        else{
+            if(j != 0) j = lps[j - 1];
+            else i++;
+        }
+
+        if(j == m){
+            printf("%d ", i - j);
+            if(!realMatch(k, m, n, i - j, tstr, pstr)){
+                hits[cnt++] = i - j;
             }
+            j = lps[j - 1];
             has = true;
         }
-        if(s < n - m)
-            t = ((d * (t - (T[s] * h) % q)) % q + T[s + m]) % q;
-        // printf("s = %d, t = %lld, p = %lld\n", s, t, p);
     }
     if(!has) printf("-1");
     printf("\n");
