@@ -29,19 +29,11 @@ const char tstr[k][n + 1], const char pstr[k][m + 1]){
 }
 void createLPS(const long long P[], const int m, int *lps){
     lps[0] = 0;
-    int prev = 0, cur = 1;
-    while(cur < m){
-        if(P[prev] == P[cur]){
-            lps[cur] = prev + 1;
-            prev++, cur++;
-        }
-        else{
-            if(prev != 0) prev = lps[prev - 1];
-            else{
-                lps[cur] = 0;
-                cur++;
-            }
-        }
+    int prev = 0;
+    for(int cur = 1; cur < m; cur++){
+        while(prev > 0 && P[prev] != P[cur]) prev = lps[prev - 1];
+        if(P[prev] == P[cur]) prev++;
+        lps[cur] = prev;
     }
 }
 int main(){
