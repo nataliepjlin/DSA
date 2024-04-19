@@ -223,7 +223,10 @@ int main(){
             if(cur == 0) printf("-1\n");
             else{
                 if(info[cur].tcnt > 0){
-                    if(dq->size == 1) destroy_dq(dq);
+                    if(dq->size == 1){
+                        destroy_dq(dq);
+                        dq = NULL;
+                    }
                     else{
                         treasure_t *prev = dq->btm->prev;
                         free(dq->btm);
