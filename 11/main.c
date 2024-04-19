@@ -21,7 +21,8 @@ typedef struct info_t{
     int i;//ith v of its direct up
     int cnt, collected;//cnt of its direct downs
     long long *presums;
-    bool hasU, hasT;
+    bool hasU;
+    int tcnt;
 }info_t;
 down_t *gen_down(const int v, down_t *prev){
     down_t *d = malloc(sizeof(down_t));
@@ -62,6 +63,7 @@ void destroy_dq(treasure_queue *q){
     }
     q->top = NULL, q->btm = NULL;
     free(q);
+    q = NULL;
 }
 void destroy_info(info_t *info, const int n){
     for(int i = 0; i < n; i++){
@@ -220,17 +222,15 @@ int main(){
         else if(op == 2){
             if(cur == 0) printf("-1\n");
             else{
-                if(info[cur].hasT){
-                    if(dq->size == 1){
-                        destroy_dq(dq);
-                        dq = NULL;
-                    }
+                if(info[cur].tcnt > 0){
+                    if(dq->size == 1) destroy_dq(dq);
                     else{
                         treasure_t *prev = dq->btm->prev;
                         free(dq->btm);
                         dq->btm = prev;
                         dq->btm->next = NULL;
                         dq->size -= 1;
+                        info[ info[cur].u ].tcnt += (info[cur].tcnt - 1);
                     }
                 }
                 destroy_down(info, cur);
@@ -258,10 +258,7 @@ int main(){
             int ret = op3(vec, val);
             int negpos = info[ vec->duns[ret].id ].u;
             if(negpos == -1) val -= vec->duns[ vec->size - 1 ].presum;
-            #ifdef debug
-            printf("ret = %d, id = %d, negpos = %d, val = %lld\n", ret, vec->duns[ret].id, negpos, val);
-            #endif
-            info[cur].hasT = true;
+            info[cur].tcnt += 1;
             if(dq == NULL) dq = gen_dq(val, negpos);
             else{
                 treasure_t *t = gen_t(val, negpos, dq->btm);
