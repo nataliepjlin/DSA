@@ -180,10 +180,7 @@ int main(){
                 pointAtMe = pointAtMe->next;
             }
         }
+        printf("%d\n", topo(root_nodes, cnt));
     }
-    #ifdef debug
-    printEdge(root_nodes, cnt);
-    #endif
-    printf("%d\n", topo(root_nodes, cnt));
     return 0;
 }
