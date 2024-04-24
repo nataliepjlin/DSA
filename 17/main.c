@@ -61,9 +61,11 @@ void DFS(Vertex *vertex, const int v){
 }
 int main(){
     int v, d, n;
-    Vertex vertex[V] = {0}; 
     scanf("%d", &v);
+    Vertex vertex[v]; 
     for(int i = 0; i < v; i++){
+        vertex[i].color = 0, vertex[i].d = 0, vertex[i].edgeHead = vertex[i].edgeTail = NULL;
+        vertex[i].f = -1, vertex[i].parent = -1;
         scanf("%d", &d);
         for(int j = 0; j < d; j++){
             scanf("%d", &n);
