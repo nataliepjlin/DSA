@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define B 100001
+#include <stdbool.h>
+#include <assert.h>
 enum COLOR{WHITE, GREY, BLACK};
 typedef struct ListNode{
     int v;
@@ -13,7 +14,8 @@ typedef struct Vertex{
     ListNode *edgeHead, *edgeTail;
 }Vertex;
 typedef struct Time{
-    int idx, *f;
+    int idx;
+    struct Time *next;
 }Time;
 ListNode *genNode(const int v){
     ListNode *node = malloc(sizeof(ListNode));
@@ -26,7 +28,20 @@ void insertEdge(Vertex *u, const int v){
     else u->edgeTail->next = node;
     u->edgeTail = node;
 }
-void DFS_visit(Vertex *vertex, int *time, const int u){
+Time* genTime(const int idx, Time *next){
+    Time *t = malloc(sizeof(Time));
+    t->idx = idx, t->next = next;
+    return t;
+}
+void printTime(Time *order){
+    Time *cur = order;
+    while(cur != NULL){
+        printf("%d->", cur->idx);
+        cur = cur->next;
+    }
+    printf("X\n");
+}
+void DFS_visit(Vertex *vertex, int *time, const int u, bool needTime,Time **order){
     *time += 1;
     vertex[u].d = *time;
     vertex[u].color = GREY;
@@ -34,26 +49,31 @@ void DFS_visit(Vertex *vertex, int *time, const int u){
     while(node != NULL){
         if(vertex[node->v].color == WHITE){
             vertex[node->v].parent = u;
-            DFS_visit(vertex, time, node->v);
+            DFS_visit(vertex, time, node->v, needTime, order);
         }
         node = node->next;
     }
     vertex[u].color = BLACK;
     *time += 1;
     vertex[u].f = *time;
+    if(needTime){
+        *order = genTime(u, *order);
+        #ifdef debug
+        printf("add %d to order list\n", u);
+        printTime(*order);
+        #endif
+    }
 }
-void DFS(Vertex *vertex, const int b){
+Time* DFS(Vertex *vertex, const int b){
     int time = 0;
+    Time *order = NULL;
     for(int i = 0; i < b; i++){
-        if(vertex[i].color == WHITE) DFS_visit(vertex, &time, i);
+        if(vertex[i].color == WHITE) DFS_visit(vertex, &time, i, true, &order);
         #ifdef debug
         printf("%dth vertex time = (%d, %d)\n", i, vertex[i].d, vertex[i].f);
         #endif
     }
-}
-int cmp(const void *a, const void *b){
-    Time *pa = (Time*)a, *pb = (Time*)b;
-    return *(pb->f) - *(pa->f);
+    return order;
 }
 void printEdge(Vertex *vertex, const int b){
     for(int i = 0; i < b; i++){
@@ -65,10 +85,6 @@ void printEdge(Vertex *vertex, const int b){
         }
         printf("X\n");
     }
-}
-void printTime(Time *finishOrder, const int b){
-    for(int i = 0; i < b; i++)
-        printf("(%d, %d)%c", finishOrder[i].idx, *(finishOrder[i].f), " \n"[i == b - 1]);
 }
 void condense(Vertex *trans_v, int cur){
     int root = cur;
@@ -82,9 +98,7 @@ void condense(Vertex *trans_v, int cur){
 int main(){
     int b, a, mode, u, v;
     scanf("%d%d%d", &b, &a, &mode);
-    if(mode == 2) return 0;
     Vertex vertex[b], trans_v[b]; 
-    Time finishOrder[b];//sorted by finish time from large to small 
     for(int i = 0; i < b; i++){
         vertex[i].color = WHITE;
         vertex[i].parent = -1;
@@ -92,7 +106,6 @@ int main(){
         trans_v[i].color = WHITE;
         trans_v[i].parent = -1;
         trans_v[i].edgeHead = trans_v[i].edgeTail = NULL;
-        finishOrder[i].idx = i, finishOrder[i].f = &(vertex[i].f);
     }
     for(int i = 0; i < a; i++){
         scanf("%d%d", &u, &v);
@@ -100,23 +113,15 @@ int main(){
         insertEdge(&vertex[u], v);
         insertEdge(&trans_v[v], u);
     }
-    DFS(vertex, b);
-    #ifdef debug
-    printEdge(vertex, b);
-    printTime(finishOrder, b);
-    #endif
-    qsort(finishOrder, b, sizeof(Time), cmp);
-    #ifdef debug
-    printTime(finishOrder, b);
-    #endif
+    Time *order = DFS(vertex, b);
     int time = 0;
     for(int i = 0; i < b; i++){
-        int idx = finishOrder[i].idx;
-        if(trans_v[idx].color == WHITE) DFS_visit(trans_v, &time, idx);
+        int idx = order->idx;
+        if(trans_v[idx].color == WHITE) DFS_visit(trans_v, &time, idx, false, NULL);
+        Time *next = order->next;
+        free(order);
+        order = next;
     }
-    #ifdef debug
-    printEdge(trans_v, b);
-    #endif
     int cnt = 0;
     for(int i = 0; i < b; i++){
         condense(trans_v, i);
