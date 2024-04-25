@@ -27,27 +27,26 @@ void createLPS(const int len, long long *lps){
 int main(){
     scanf("%s%s", text, pattern);
     const int n = strlen(text), m = strlen(pattern);
-    long long lps[m];
+    long long lps[m], hits = 0;
     createLPS(m, lps);
-    for(int cur_p = 1; cur_p <= m; cur_p++){
-        int p = 0, t = 0; long long hit = 0;
-        while(t < n && p < cur_p){
-            if(text[t] == pattern[p]){
-                t++, p++;
-                if(p == cur_p){
-                    hit++;
-                    p = lps[p - 1];
-                }
-            }
-            else{
-                if(p != 0) p = lps[p - 1];
-                else t++;
+    int idx[n], cnt = 0;
+    for(int i = 0; i < n; i++){
+        if(text[i] == pattern[0]){
+            idx[cnt++] = i;
+            hits++;
+        }
+    }
+    printf("%lld\n", hits * (lps[0] + 1));
+    for(int j = 1; j < m; j++){
+        int newcnt = 0; hits = 0;
+        for(int c = 0; c < cnt; c++){
+            if(idx[c] < n - 1 && text[ idx[c]+1 ] == pattern[j]){
+                idx[newcnt++] = idx[c] + 1;
+                hits++;
             }
         }
-        #ifdef debug
-        printf("hit = %lld, plag = %lld\n", hit, lps[cur_p - 1] + 1);
-        #endif
-        printf("%lld\n", hit * (lps[cur_p - 1] + 1));
+        cnt = newcnt;
+        printf("%lld\n", hits * (lps[j] + 1));
     }
     return 0;
 }
