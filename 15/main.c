@@ -12,7 +12,7 @@ typedef struct Vertex{
     int edge_size;
 }Vertex;
 typedef struct RootNode{
-    int id;
+    int id, visit;
     int *children, child_cnt;
     int *colors, color_cnt;
 }RootNode;
@@ -100,7 +100,6 @@ void DFS(Vertex *vertex, const int b, int *finish_order){
 void destroy_rnodes(RootNodes *rnodes){
     if(rnodes->size == 0) return;
     for(int i = 0; i < rnodes->size; i++){
-        // if(rnodes->roots[i].children) free(rnodes->roots[i].children);
         if(rnodes->roots[i].colors) free(rnodes->roots[i].colors);
     }
     free(rnodes->roots);
@@ -109,7 +108,7 @@ int cmp(const void *a, const void *b){
     return *(int*)a - *(int*)b;
 }
 void printColor(RootNode *rnode){
-    printf("%d:", rnode->id, rnode->color_cnt);
+    printf("%d:", rnode->id);
     for(int i = 0; i < rnode->color_cnt; i++){
         printf(" %d", rnode->colors[i]);
     }
@@ -126,6 +125,26 @@ void condense(RootNode *rnode){
         }
     }
     rnode->color_cnt = i + 1;
+}
+void dfs_topo(RootNode *roots, const int u, int *finish_order, int *fi){
+    roots[u].visit = GREY;
+    for(int i = roots[u].color_cnt - 1; i >= 0; i--){
+        if(roots[ roots[u].colors[i] ].visit == WHITE){
+            dfs_topo(roots, roots[u].colors[i], finish_order, fi);
+        }
+    }
+    roots[u].visit = BLACK;
+    finish_order[*fi] = u;
+    *fi += 1;
+}
+int topo(RootNodes *rnodes){
+    int finish_order[rnodes->size], fi = 0;
+    dfs_topo(rnodes->roots, rnodes->size - 1, finish_order, &fi);
+    if(fi != rnodes->size) return 0;
+    for(int i = rnodes->size - 1; i >= 0; i--){
+        if(finish_order[i] != i) return 0;
+    }
+    return 1;
 }
 int main(){
     int b, a, mode, u, v;
@@ -150,6 +169,7 @@ int main(){
         if(trans_v[idx].color == WHITE){
             rnodes_push_rnode(&rnodes);
             trans_v[idx].parent = rnodes.size - 1;
+            rnodes.roots[rnodes.size - 1].visit = WHITE;
             dfs2(trans_v, idx, &(rnodes.roots[rnodes.size - 1]));
             #ifdef debug
             printf("SCC #%d:", rnodes.size - 1);
@@ -189,6 +209,7 @@ int main(){
         printColor(&rnodes.roots[i]);
         #endif
     }
+    printf("%d\n", topo(&rnodes));
     destroy_rnodes(&rnodes);
     return 0;
 }
