@@ -5,11 +5,19 @@ char text[LEN];//s
 char pattern[LEN];//c
 void createLPS(const int len, long long *lps){
     lps[0] = 0;
-    int prev = 0;
-    for(int cur = 1; cur < len; cur++){
-        while(prev > 0 && pattern[prev] != pattern[cur]) prev = lps[prev - 1];
-        if(pattern[prev] == pattern[cur]) prev++;
-        lps[cur] = prev;
+    int prev = 0, cur = 1;
+    while(cur < len){
+        if(pattern[prev] == pattern[cur]){
+            lps[cur] = prev + 1;
+            prev++, cur++;
+        }
+        else{
+            if(prev != 0) prev = lps[prev - 1];
+            else{
+                lps[cur] = 0;
+                cur++;
+            }
+        }
     }
     #ifdef debug
     for(int i = 0; i < len ; i++)
@@ -18,20 +26,20 @@ void createLPS(const int len, long long *lps){
 }
 int main(){
     scanf("%s%s", text, pattern);
-    const int tlen = strlen(text), plen = strlen(pattern);
-    long long lps[plen];
-    createLPS(plen, lps);
-    for(int cur_p = 1; cur_p <= plen; cur_p++){
+    const int n = strlen(text), m = strlen(pattern);
+    long long lps[m];
+    createLPS(m, lps);
+    for(int cur_p = 1; cur_p <= m; cur_p++){
         int p = 0, t = 0; long long hit = 0;
-        while(t < tlen){
+        while(t < n && p < cur_p){
             if(text[t] == pattern[p]){
                 t++, p++;
+                if(p == cur_p){
+                    hit++;
+                    p = lps[p - 1];
+                }
             }
-            if(p == cur_p){
-                hit++;
-                p = lps[p - 1];
-            }
-            else if(text[t] != pattern[p]){
+            else{
                 if(p != 0) p = lps[p - 1];
                 else t++;
             }
