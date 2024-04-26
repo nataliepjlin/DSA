@@ -1,15 +1,53 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #define LEN 5000001
 char text[LEN];//s
 char pattern[LEN];//c
-int createLPS(const int len, long long *lps, long long *plag){
+typedef struct HitNode{
+    bool change;
+    int cnt;
+}HitNode;
+typedef struct Hits{
+    int size;
+    HitNode *nodes;
+}HitVec;
+void initVec(const HitVec *prev, const HitVec *ref, HitVec *vec, const int size){
+    vec->size = size;
+    vec->nodes = malloc(size * sizeof(HitNode));
+    #ifdef debug
+    printf("\nvec #%d\n", size - 1);
+    #endif
+    for(int i = 0; i < size - 1; i++){
+        vec->nodes[i].cnt = prev->nodes[i].cnt;
+        vec->nodes[i].change = false;
+        if(ref && i < ref->size && ref->nodes[i].change){
+            vec->nodes[i].cnt += 1;
+            vec->nodes[i].change = true;
+        }
+        #ifdef debug
+        printf("%dth node: (%d, %s)\n", i, vec->nodes[i].cnt, (vec->nodes[i].change) ? "true" : "false");
+        #endif
+    }
+    vec->nodes[size - 1].cnt = 1;
+    vec->nodes[size - 1].change = true;
+}
+void destroyVec(HitVec *vecs, const int m){
+    for(int i = 0; i < m; i++){
+        free(vecs[i].nodes);
+        vecs[i].nodes = NULL;
+        vecs[i].size = 0;
+    }
+}
+int createLPS(const int len, long long *lps, long long *plag, HitVec *vecs){
     lps[0] = 0, plag[0] = 1;
     int prev = 0, cur = 1, cnt = 0;
     while(cur < len){
         if(pattern[prev] == pattern[cur]){
             lps[cur] = prev + 1;
             plag[cur] = plag[ lps[cur] - 1 ] + 1;
+            initVec(&(vecs[cur - 1]), &(vecs[lps[cur] - 1]), &(vecs[cur]), cur + 1);
             prev++, cur++;
         }
         else{
@@ -17,6 +55,7 @@ int createLPS(const int len, long long *lps, long long *plag){
             else{
                 lps[cur] = 0;
                 plag[cur] = 1;
+                initVec(&(vecs[cur - 1]), NULL, &(vecs[cur]), cur + 1);
                 cur++;
             }
         }
@@ -25,32 +64,13 @@ int createLPS(const int len, long long *lps, long long *plag){
 int main(){
     scanf("%s%s", text, pattern);
     const int n = strlen(text), m = strlen(pattern);
-    long long lps[m], plag[m], hits = 0;
-    createLPS(m, lps, plag);
+    long long lps[m], plag[m];
+    HitVec vecs[m];
+    vecs[0].size = 1;
+    vecs[0].nodes = malloc(sizeof(HitNode));
+    vecs[0].nodes[0].change = true, vecs[0].nodes[0].cnt = 1;
+    createLPS(m, lps, plag, vecs);
     int idx[n], cnt = 0;
-    for(int i = 0; i < n; i++){
-        if(text[i] == pattern[0]){
-            idx[cnt++] = i;
-            hits++;
-        }
-    }
-    #ifdef debug
-    printf("hits = %lld, plag = %lld, hits * plag = ", hits, plag[0]);
-    #endif
-    printf("%lld\n", hits * plag[0]);
-    for(int j = 1; j < m; j++){
-        int newcnt = 0; hits = 0;
-        for(int c = 0; c < cnt; c++){
-            if(idx[c] < n - 1 && text[ idx[c]+1 ] == pattern[j]){
-                idx[newcnt++] = idx[c] + 1;
-                hits++;
-            }
-        }
-        cnt = newcnt;
-        #ifdef debug
-        printf("hits = %lld, plag = %lld, hits * plag = ", hits, plag[j]);
-        #endif
-        printf("%lld\n", hits * plag[j]);
-    }
+    destroyVec(vecs, m);
     return 0;
 }
