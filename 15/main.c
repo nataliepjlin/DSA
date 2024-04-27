@@ -114,21 +114,11 @@ void printColor(RootNode *rnode){
     }
     printf("\n");
 }
-void condense(RootNode *rnode){
-    int i = 0, j = 0;
-    while(j < rnode->color_cnt){
-        if(rnode->colors[i] == rnode->colors[j]) j++;
-        else{
-            i++;
-            rnode->colors[i] = rnode->colors[j];
-            j++;
-        }
-    }
-    rnode->color_cnt = i + 1;
-}
 void dfs_topo(RootNode *roots, const int u, int *finish_order, int *fi){
     roots[u].visit = GREY;
     for(int i = roots[u].color_cnt - 1; i >= 0; i--){
+        if(i < roots[u].color_cnt - 1 
+        && roots[u].colors[i] == roots[u].colors[i + 1]) continue;
         if(roots[ roots[u].colors[i] ].visit == WHITE){
             dfs_topo(roots, roots[u].colors[i], finish_order, fi);
         }
@@ -203,7 +193,6 @@ int main(){
         }
         if(rnodes.roots[i].color_cnt != 0){
             qsort(rnodes.roots[i].colors, rnodes.roots[i].color_cnt, sizeof(int), cmp);
-            condense(&rnodes.roots[i]);
         }
         #ifdef debug
         printColor(&rnodes.roots[i]);
