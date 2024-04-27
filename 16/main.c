@@ -5,72 +5,59 @@
 #define LEN 5000001
 char text[LEN];//s
 char pattern[LEN];//c
-typedef struct HitNode{
-    bool change;
-    int cnt;
-}HitNode;
-typedef struct Hits{
-    int size;
-    HitNode *nodes;
-}HitVec;
-void initVec(const HitVec *prev, const HitVec *ref, HitVec *vec, const int size){
-    vec->size = size;
-    vec->nodes = malloc(size * sizeof(HitNode));
-    #ifdef debug
-    printf("\nvec #%d\n", size - 1);
-    #endif
-    for(int i = 0; i < size - 1; i++){
-        vec->nodes[i].cnt = prev->nodes[i].cnt;
-        vec->nodes[i].change = false;
-        if(ref && i < ref->size && ref->nodes[i].change){
-            vec->nodes[i].cnt += 1;
-            vec->nodes[i].change = true;
-        }
-        #ifdef debug
-        printf("%dth node: (%d, %s)\n", i, vec->nodes[i].cnt, (vec->nodes[i].change) ? "true" : "false");
-        #endif
-    }
-    vec->nodes[size - 1].cnt = 1;
-    vec->nodes[size - 1].change = true;
-}
-void destroyVec(HitVec *vecs, const int m){
-    for(int i = 0; i < m; i++){
-        free(vecs[i].nodes);
-        vecs[i].nodes = NULL;
-        vecs[i].size = 0;
-    }
-}
-int createLPS(const int len, long long *lps, long long *plag, HitVec *vecs){
-    lps[0] = 0, plag[0] = 1;
-    int prev = 0, cur = 1, cnt = 0;
-    while(cur < len){
-        if(pattern[prev] == pattern[cur]){
+void prefix_ftn(const int len, long long *lps, long long *plag, long long *hits){
+    lps[0] = 0, plag[0] = 1, hits[0] = 0;
+    for(int cur = 1; cur < len; cur++){
+        hits[cur] = 0;
+        int prev = lps[cur - 1];
+        while(prev > 0 && pattern[cur] != pattern[prev]) prev = lps[prev - 1];
+        if(pattern[cur] == pattern[prev]){
             lps[cur] = prev + 1;
             plag[cur] = plag[ lps[cur] - 1 ] + 1;
-            initVec(&(vecs[cur - 1]), &(vecs[lps[cur] - 1]), &(vecs[cur]), cur + 1);
-            prev++, cur++;
         }
         else{
-            if(prev != 0) prev = lps[prev - 1];
-            else{
-                lps[cur] = 0;
-                plag[cur] = 1;
-                initVec(&(vecs[cur - 1]), NULL, &(vecs[cur]), cur + 1);
-                cur++;
-            }
+            lps[cur] = 0, plag[cur] = 1;
         }
     }
+}
+int min(int a, int b){
+    return a < b ? a : b;
 }
 int main(){
     scanf("%s%s", text, pattern);
     const int n = strlen(text), m = strlen(pattern);
-    long long lps[m], plag[m];
-    HitVec vecs[m];
-    vecs[0].size = 1;
-    vecs[0].nodes = malloc(sizeof(HitNode));
-    vecs[0].nodes[0].change = true, vecs[0].nodes[0].cnt = 1;
-    createLPS(m, lps, plag, vecs);
-    int idx[n], cnt = 0;
-    destroyVec(vecs, m);
+    long long lps[m], plag[m], hits[m + 1];
+    hits[m] = 0;
+    prefix_ftn(m, lps, plag, hits);
+    int t = 0, p = 0;
+    while(t < n){
+        if(text[t] == pattern[p]){
+            hits[p + 1]++;
+            #ifdef debug
+            printf("hits[%d]++\n", p+1);
+            #endif
+            t++, p++;
+            if(p == m) p = lps[p - 1];
+        }
+        else{
+            if(p != 0) p = lps[p - 1];
+            else t++;
+        }
+    }
+    #ifdef debug
+    printf("raw hits: ");
+    for(int i = 1; i <= m; i++){
+        printf("%lld%c", hits[i], " \n"[i == m]);
+    }
+    #endif
+    for(int i = min(n, m); i > 0; i--){
+        hits[ lps[i - 1] ] += hits[i];
+    }
+    for(int i = 0; i < m; i++){
+        #ifdef debug
+        printf("i = %d, plag = %lld, hit = %lld, plag * hit = ", i, plag[i], hits[i + 1]);
+        #endif
+        printf("%lld\n", plag[i] * hits[i + 1]);
+    }
     return 0;
 }
