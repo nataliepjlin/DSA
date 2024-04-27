@@ -50,8 +50,8 @@ int main(){
         printf("%lld%c", hits[i], " \n"[i == m]);
     }
     #endif
-    for(int i = min(n, m); i > 0; i--){
-        hits[ lps[i - 1] ] += hits[i];
+    for(int i = min(n, m) - 1; i >= 0; i--){
+        hits[ lps[i] ] += hits[i + 1];
     }
     for(int i = 0; i < m; i++){
         #ifdef debug
