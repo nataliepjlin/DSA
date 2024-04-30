@@ -5,11 +5,13 @@ typedef struct Node{
     int p;//parent
     int rank;
 }Node;
-void make_set(Node *nodes, int n){
+Node* make_set(int n){
+    Node *nodes = malloc(sizeof(Node) * n);
     for(int i = 0; i < n; i++){
         nodes[i].p = i;
         nodes[i].rank = 0;
     }
+    return nodes;
 }
 void Link(Node *nodes, const int x, const int y){
     if(nodes[x].rank > nodes[y].rank)
@@ -44,13 +46,9 @@ int main(){
     int n, m, x, y; 
     char op, br;
     scanf("%d%d", &n, &m);
-    Node nodes[n];
-    make_set(nodes, n);
+    Node *nodes = make_set(n);
     for(int i = 0; i < m; i++){
         scanf("%c%c", &br, &op);
-        #ifdef debug
-        printf("i = %d, op = %c\n", i, op);
-        #endif
         if(op == 'F'){
             scanf("%d", &x);
             x--;
@@ -67,5 +65,6 @@ int main(){
             Print_path(nodes, x);
         }
     }
+    free(nodes);
     return 0;
 }
