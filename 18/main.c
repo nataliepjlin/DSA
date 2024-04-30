@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+typedef struct Node{
+    int p;//parent
+    int rank;
+}Node;
+void make_set(Node *nodes, int n){
+    for(int i = 0; i < n; i++){
+        nodes[i].p = i;
+        nodes[i].rank = 0;
+    }
+}
+void Link(Node *nodes, const int x, const int y){
+    if(nodes[x].rank > nodes[y].rank)
+        nodes[y].p = x;
+    else{
+        nodes[x].p = y;
+        if(nodes[x].rank == nodes[y].rank) nodes[y].rank += 1;
+    }
+}
+int Find_set(Node *nodes, const int x){
+    if(x != nodes[x].p){
+        nodes[x].p = Find_set(nodes, nodes[x].p);
+    }
+    return nodes[x].p;
+}
+void Union(Node *nodes, const int x, const int y){
+    int v = Find_set(nodes, x), w = Find_set(nodes, y);
+    #ifdef debug
+    printf("v = %d, w = %d\n", v, w);
+    #endif
+    if(v != w) Link(nodes, v, w);
+}
+void Print_path(Node *nodes, const int x){
+    int k = x;
+    while(nodes[k].p != k){
+        printf("%d ", k + 1);
+        k = nodes[k].p;
+    }
+    printf("%d\n", k + 1);
+}
+int main(){
+    int n, m, x, y; 
+    char op, br;
+    scanf("%d%d", &n, &m);
+    Node nodes[n];
+    make_set(nodes, n);
+    for(int i = 0; i < m; i++){
+        scanf("%c%c", &br, &op);
+        #ifdef debug
+        printf("i = %d, op = %c\n", i, op);
+        #endif
+        if(op == 'F'){
+            scanf("%d", &x);
+            x--;
+            Find_set(nodes, x);
+        }
+        else if(op == 'U'){
+            scanf("%d%d", &x, &y);
+            x--, y--;
+            Union(nodes, x, y);
+        }
+        else{
+            scanf("%d", &x);
+            x--;
+            Print_path(nodes, x);
+        }
+    }
+    return 0;
+}
