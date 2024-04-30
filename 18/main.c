@@ -6,8 +6,8 @@ typedef struct Node{
     int rank;
 }Node;
 Node* make_set(int n){
-    Node *nodes = malloc(sizeof(Node) * n);
-    for(int i = 0; i < n; i++){
+    Node *nodes = malloc(sizeof(Node) * (n + 1));
+    for(int i = 1; i <= n; i++){
         nodes[i].p = i;
         nodes[i].rank = 0;
     }
@@ -37,10 +37,10 @@ void Union(Node *nodes, const int x, const int y){
 void Print_path(Node *nodes, const int x){
     int k = x;
     while(nodes[k].p != k){
-        printf("%d ", k + 1);
+        printf("%d ", k);
         k = nodes[k].p;
     }
-    printf("%d\n", k + 1);
+    printf("%d\n", k);
 }
 int main(){
     int n, m, x, y; 
@@ -51,17 +51,14 @@ int main(){
         scanf("%c%c", &br, &op);
         if(op == 'F'){
             scanf("%d", &x);
-            x--;
             Find_set(nodes, x);
         }
         else if(op == 'U'){
             scanf("%d%d", &x, &y);
-            x--, y--;
             Union(nodes, x, y);
         }
         else{
             scanf("%d", &x);
-            x--;
             Print_path(nodes, x);
         }
     }
