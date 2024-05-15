@@ -5,14 +5,12 @@
 typedef struct Node{
     long long sum;
     int val, prior, size;
-    int idx;//for debugging
     struct Node *left, *right;
 }Node;
-Node *init(const int val, const int idx){
+Node *init(const int val){
     Node *t = malloc(sizeof(Node));
     t->val = val, t->prior = rand(),  t->size = 1;
     t->sum = val;
-    t->idx = idx;
     t->left = NULL, t->right = NULL;
     return t;
 }
@@ -67,17 +65,17 @@ void print_treap(Node *t){
     print_treap(t->right);
 }
 Node *insert(Node *t, int pos, const int val){
-    Node *n = init(val, pos), *x = NULL, *y = NULL;
-    if(t == NULL) return n;
+    Node *n = init(val), *x = NULL, *y = NULL;
     split(t, &x, &y, pos);
     return merge( merge(x, n), y);
 }
-void delete(Node **t, int pos){
-    if(pos >= (*t)->size) return;
+Node* delete(Node *t, int pos){
+    if(t == NULL || pos >= t->size) return t;
     Node *a, *b, *c, *d;
-    split(*t, &a, &b, pos - 1);
+    split(t, &a, &b, pos - 1);
     split(b, &c, &d, 1);
-    *t = merge(a, d);
+    free(c);
+    return merge(a, d);
 }
 void destroy_treap(Node *t){
     if(!t) return;
@@ -86,7 +84,7 @@ void destroy_treap(Node *t){
     free(t);
 }
 long long query(Node **t, int l, int r){
-    Node *a = NULL, *b = NULL;
+    Node *a = NULL, *b = NULL, *c = NULL;
     split(*t, t, &a, r);
     split(*t, t, &b, l - 1);
     long long q = (b) ? b->sum : 0;
@@ -101,16 +99,12 @@ int main(){
     for(int i = 0; i < n; i++){
         scanf("%d", &val);
         t = insert(t, i, val);
-        #ifdef debug
-        print_treap(t);
-        printf("\n");
-        #endif
     }
     for(int i = 0; i < m; i++){
         scanf("%d", &op);
         if(op == 1){
             scanf("%d", &pos);
-            delete(&t, pos);//if t is null?
+            t = delete(t, pos);
         }
         else if(op == 2){
             scanf("%d%d", &pos, &val);
@@ -120,9 +114,14 @@ int main(){
             scanf("%d%d", &l, &r);
             printf("%lld\n", query(&t, l, r));
         }
+        #ifdef debug
+        printf("op %d: ", i);
+        print_treap(t);
+        printf("\n");
+        #endif
     }
-    int s;
-    if(s = getsize(t)){
+    int s = getsize(t);
+    if(s){
         printf("%d\n", s);
         print_treap(t);
         printf("\n");
@@ -131,4 +130,3 @@ int main(){
     destroy_treap(t);
     return 0;
 }
-
