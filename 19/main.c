@@ -48,14 +48,14 @@ void split(Node *t, Node **l, Node **r, const int pos){
         return;
     }
     if(getsize(t->left) < pos){
+        *l = t;
         split(t->right, &(t->right), r, pos - getsize(t->left) - 1);//why modify pos here??
         update(t);
-        *l = t;
     }
     else{
+        *r = t;
         split(t->left, l, &(t->left),pos);
         update(t);
-        *r = t;
     }
 }
 void print_treap(Node *t){
