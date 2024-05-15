@@ -70,7 +70,7 @@ Node *insert(Node *t, int pos, const int val){
     return merge( merge(x, n), y);
 }
 Node* delete(Node *t, int pos){
-    if(t == NULL || pos >= t->size) return t;
+    if(t == NULL || pos > t->size) return t;
     Node *a, *b, *c, *d;
     split(t, &a, &b, pos - 1);
     split(b, &c, &d, 1);
