@@ -16,6 +16,7 @@ Node *init(const int val, const int idx){
     t->sum = val;
     t->idx = idx;
     t->left = NULL, t->right = NULL;
+    return t;
 }
 int getsize(Node *t){
     return t ? t->size : 0;
