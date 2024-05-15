@@ -1,15 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 typedef struct Node{
     long long sum;
     int val, prior, size;
     int idx;//for debugging
     struct Node *left, *right;
 }Node;
-typedef struct Pair{
-    Node *first, *second;
-}Pair;
 Node *init(const int val, const int idx){
     Node *t = malloc(sizeof(Node));
     t->val = val, t->prior = rand(),  t->size = 1;
@@ -68,10 +66,11 @@ void print_treap(Node *t){
     printf("%d ", t->val);
     print_treap(t->right);
 }
-void insert(Node **t, int pos, const int val){
-    Node *a = init(val, pos), *b;
-    split(*t, t, &b, pos);
-    *t = merge( merge(*t, a), b);
+Node *insert(Node *t, int pos, const int val){
+    Node *n = init(val, pos), *x = NULL, *y = NULL;
+    if(t == NULL) return n;
+    split(t, &x, &y, pos);
+    return merge( merge(x, n), y);
 }
 void delete(Node **t, int pos){
     if(pos >= (*t)->size) return;
@@ -101,7 +100,7 @@ int main(){
     scanf("%d%d", &n, &m);
     for(int i = 0; i < n; i++){
         scanf("%d", &val);
-        insert(&t, i, val);
+        t = insert(t, i, val);
         #ifdef debug
         print_treap(t);
         printf("\n");
@@ -115,7 +114,7 @@ int main(){
         }
         else if(op == 2){
             scanf("%d%d", &pos, &val);
-            insert(&t, pos, val);
+            t = insert(t, pos, val);
         }
         else{
             scanf("%d%d", &l, &r);
