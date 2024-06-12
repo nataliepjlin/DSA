@@ -23,6 +23,7 @@ int find(company *c, const int x, bool transing){
         if(c[init_p].p != init_p){//init_p not root
             c[x].cnt += c[init_p].cnt;
             c[x].total_r += (c[x].raise * c[init_p].cnt + c[init_p].total_r);
+            c[x].raise += c[init_p].raise;
         }
     }
     else if(transing){
