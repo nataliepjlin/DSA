@@ -68,24 +68,15 @@ int main(){
             if(v == w) continue;
             push_vec(&vec);
             vec.c[v].p = vec.c[w].p = vec.size - 1;
-            #ifdef debug
-            printf("merge company %d, %d to %d, that employ %d and %d\n", v, w, vec.size - 1, x, y);
-            #endif
         }
         else if(op == 2){//raise
             scanf("%d%ld", &k, &r); k--;
             p = find(vec.c, e[k].cid, false);
             vec.c[p].raise += r;
-            #ifdef debug
-            printf("%d is in company %d, raise = %ld\n", k, p, vec.c[p].raise);
-            #endif
         }
         else if(op == 3){//transfer
             scanf("%d", &k); k--;
             p = find(vec.c, e[k].cid, true);
-            #ifdef debug
-            printf("%d is in company %d, transfer\n", k, p);
-            #endif
         }
         else{//quit
             scanf("%d%ld", &k, &s); k--;
