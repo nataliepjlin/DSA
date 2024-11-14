@@ -1,0 +1,32 @@
+89+6*=
+postfix = 8 9 + 6 *
+tmp = 8
+tmp = 9
+ret = 17
+tmp = 6
+ret = 102
+102
+89+23+*64-*=
+postfix = 8 9 + 2 3 + * 6 4 - *
+tmp = 8
+tmp = 9
+ret = 17
+tmp = 2
+tmp = 3
+ret = 5
+ret = 85
+tmp = 6
+tmp = 4
+ret = 2
+ret = 170
+170
+89-64-%=
+postfix = 8 9 - 6 4 - %
+tmp = 8
+tmp = 9
+ret = -1
+tmp = 6
+tmp = 4
+ret = 2
+ret = -1
+-1

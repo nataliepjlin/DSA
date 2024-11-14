@@ -11,6 +11,21 @@ Deck *gen(int u, Deck *n){
     new->next = n;
     return new;
 }
+void printSingle(Deck *deck){
+    Deck *cur = deck;
+    while(cur){
+        printf(" %d", cur->data);
+        cur = cur->next;
+    }
+    return;
+}
+void printAll(Deck *heads[], int lens[], int n){
+    for(int i = 0; i < n; i++){
+        printf("%d", lens[i]);
+        printSingle(heads[i]);
+        printf("\n");
+    }
+}
 void add(int u, Deck **head, Deck **tail, int *len){
     Deck *new = gen(u, *head);
     *head = new;
@@ -103,14 +118,10 @@ int main(){
                 merge(&heads[i], &tails[i], &lens[i], &heads[j], &tails[j], &lens[j]);
                 break;
         }
+        #ifdef debug
+        printAll(heads, lens, n);
+        #endif
     }
-    for(int i = 0; i < n; i++){
-        printf("%d", lens[i]);
-        for(int j = 0; j < lens[i]; j++){
-            printf(" %d", heads[i]->data);
-            heads[i] = heads[i]->next;
-        }
-        printf("\n");
-    }
+    printAll(heads, lens, n);
     return 0;
 }

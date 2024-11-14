@@ -9,12 +9,6 @@ typedef struct Node{
 typedef struct Tree{
     Node *root, *nil;
 }Tree;
-void print_tree(Tree *t, Node *cur){
-    if(cur == t->nil) return;
-    printf("%d ", cur->key);
-    print_tree(t, cur->left);
-    print_tree(t, cur->right);
-}
 void left_rot(Tree *t, Node *x){
     Node *y = x->right;
     x->right = y->left;

@@ -1,0 +1,47 @@
+13
+4
+5
+0
+4
+4
+7
+value remaining is 7
+4
+0
+0
+1
+6
+8
+10
+-1
+value remaining is 20
+value lost at 6
+value remaining is 0
+8
+6
+1
+2
+0
+1
+0
+12
+3
+10
+11
+3
+9
+13
+3
+9
+12
+3
+8
+9
+3
+0
+0
+-1
+-1
+0
+-1
+-1
