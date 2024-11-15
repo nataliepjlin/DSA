@@ -82,7 +82,7 @@ int cmp(const void *a, const void *b){
     return *(int*)a - *(int*)b;
 }
 int main(){
-    int b, a, mode, u, v;
+    int b, a, mode, u, v;//b: number of vertices, a: number of edges
     scanf("%d%d%d", &b, &a, &mode);
     Vertex vertex[B] = {0}, trans_v[B] = {0};
     int finish_order[b];
@@ -103,7 +103,7 @@ int main(){
         int idx = finish_order[b - 1 - i];
         if(trans_v[idx].color == WHITE){
             rnodes_push_rnode(&rnodes, idx);
-            trans_v[idx].parent = rnodes.size - 1;
+            trans_v[idx].parent = rnodes.size - 1;//group index
             dfs2(trans_v, idx, rnodes.size - 1);
         }
     }
@@ -114,11 +114,11 @@ int main(){
         printf("trans_v[%d], parent = %d, edge = %d\n", i, trans_v[i].parent, trans_v[i].edge_size);
         #endif
         for(int j = 0; j < trans_v[i].edge_size
-        && rnodes.roots[ trans_v[i].parent ] != -1; j++){
+        && rnodes.roots[ trans_v[i].parent ] != -1; j++){//rnodes.roots[ trans_v[i].parent ] != -1: check whether ith node's parent has been explored or not
             #ifdef debug
             printf("trans_v[%d].parent = %d\n", trans_v[i].idx[j], trans_v[ trans_v[i].idx[j] ].parent);
             #endif
-            if(trans_v[ trans_v[i].idx[j] ].parent + 1 == trans_v[i].parent){
+            if(trans_v[ trans_v[i].idx[j] ].parent + 1 == trans_v[i].parent){//trans_v[i].idx[j]: ith node's neighbor; +1: check if they are adjacent SCCs
                 rnodes.roots[ trans_v[i].parent ] = -1;
             }
         }
